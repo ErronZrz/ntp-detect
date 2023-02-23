@@ -1,0 +1,27 @@
+package utils
+
+import "testing"
+
+func TestRegionOf(t *testing.T) {
+	var tests = []struct {
+		input string
+		want  string
+	}{
+		{"203.107.6.88", "广东深圳"},
+		{"58.48.26.154", "湖北武汉"},
+		{"218.27.132.24", "吉林吉林"},
+		{"180.149.130.16", "北京"},
+		{"101.227.131.220", "上海"},
+		{"220.182.8.7", "西藏日喀则"},
+		{"203.186.145.250", "香港"},
+		{"114.44.227.87", "台湾"},
+		{"1.2.3.4", "美国"},
+		{"100.107.25.114", "未知地区"},
+		{"192.168.179.128", "内网地址"},
+	}
+	for _, test := range tests {
+		if got := RegionOf(test.input); got != test.want {
+			t.Errorf("RegionOf(%s) = %s", test.input, got)
+		}
+	}
+}

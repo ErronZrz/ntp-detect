@@ -1,0 +1,57 @@
+package cmd
+
+import (
+	"active/output"
+	"active/parser"
+	"active/udpdetect"
+	"errors"
+	"fmt"
+	"github.com/spf13/cobra"
+	"strings"
+	"time"
+)
+
+func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
+	cmdName := cmd.Name()
+	if args == nil || len(args) == 0 {
+		return "", errors.New("command `timesync` missing arguments")
+	}
+	address := args[0]
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Ready to run %s.\n    address: %s\n    num of goroutines: %d\n"+
+		"    num of printed hosts: %d\n\n\n\n", cmdName, address, nGoroutines, nPrintedHosts))
+	var payloads []*udpdetect.RcvPayload
+	var err error
+	if nGoroutines <= 0 {
+		payloads, err = udpdetect.DialNetworkNTP(address)
+	} else {
+		payloads, err = udpdetect.DialNetworkNTPWithBatchSize(address, nGoroutines)
+	}
+	if err != nil {
+		builder.WriteString("error: " + err.Error())
+		return builder.String(), err
+	}
+	printed := 0
+	for _, p := range payloads {
+		err := p.Error()
+		if err != nil {
+			builder.WriteString(err.Error())
+			continue
+		}
+		header, err := parser.ParseHeader(p.Bytes())
+		if err != nil {
+			builder.WriteString(err.Error())
+		} else {
+			payloadStr, headerStr := p.Lines(), header.Lines()
+			output.WriteToFile(payloadStr, headerStr, time.Now())
+			if printed < nPrintedHosts {
+				printed++
+				builder.WriteString(fmt.Sprintf("[Host %d]\n", printed))
+				builder.WriteString(payloadStr)
+				builder.WriteString("[parsed]\n")
+				builder.WriteString(headerStr)
+			}
+		}
+	}
+	return builder.String(), nil
+}
