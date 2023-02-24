@@ -174,7 +174,7 @@ func parseRootDesp(data []byte, h *Header) error {
 func parseRefID(data []byte, h *Header) error {
 	if h.Stratum == "1" {
 		// Special reference identifier
-		h.RefID = string(data[12:16])
+		h.RefID = completeSource(data[12:16])
 	} else {
 		// Normal IP address
 		ipStr := fmt.Sprintf("%d.%d.%d.%d", data[12], data[13], data[14], data[15])

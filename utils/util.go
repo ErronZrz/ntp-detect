@@ -48,6 +48,9 @@ func FromInt8(i int8) string {
 }
 
 func FormatScientific(f float64) string {
+	if f == 0 {
+		return "0"
+	}
 	if f >= 0.001 && f <= 1000 {
 		return strconv.FormatFloat(f, 'f', 3, 64)
 	}
