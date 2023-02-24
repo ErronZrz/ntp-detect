@@ -35,5 +35,8 @@ func completeSource(s []byte) string {
 	if complete, ok := sourceMap[str]; ok {
 		return fmt.Sprintf("%s (%s)", str, complete)
 	}
+	if complete, ok := sourceMap[str[:3]]; ok {
+		return fmt.Sprintf("%s (%s)", str, complete)
+	}
 	return str
 }

@@ -58,7 +58,7 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) ([]*RcvPayload, err
 	ctx, cancel := context.WithCancel(context.Background())
 	go handleChan(ctx, dataCh, &res)
 	wg := &sync.WaitGroup{}
-	fmt.Printf("Ready to detect %d addresses\n", num)
+	fmt.Printf("Num of addresses: %d\n", num)
 	wg.Add(num)
 	host := ip.Mask(ipNet.Mask)
 	batchNum := num / batchSize
@@ -170,33 +170,4 @@ func inc(ip []byte) {
 			break
 		}
 	}
-}
-
-func TryDialNTP(host string) {
-	conn, err := net.DialTimeout("udp", host+":123", timeout)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	defer func(conn net.Conn) {
-		err := conn.Close()
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}(conn)
-	fmt.Println("Over.")
-	n, err := conn.Write(data)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println(n)
-	what := make([]byte, 48)
-	err = conn.SetDeadline(time.Now().Add(timeout))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	n, err = conn.Read(what)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println(n, what)
 }
