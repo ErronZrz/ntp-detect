@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func init() {
 	}
 }
 
-func WriteToFile(raw, parsed string, now time.Time) {
+func WriteToFile(raw, parsed string, seq int, now time.Time) {
 	dirPath := viper.GetString(outputPathKey)
 
 	filePath := dirPath + now.Format(fileTimeFormat)
@@ -56,6 +57,12 @@ func WriteToFile(raw, parsed string, now time.Time) {
 	}(file)
 
 	writer := bufio.NewWriter(file)
+
+	_, err = writer.WriteString("#" + strconv.Itoa(seq) + "\n")
+	if err != nil {
+		fmt.Printf("err writing sequence `%d`: %s", seq, err)
+		return
+	}
 
 	dividingLine := time.Now().Format(dividingLineFormat)
 	_, err = writer.WriteString(dividingLine)

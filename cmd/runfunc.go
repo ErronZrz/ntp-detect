@@ -31,7 +31,8 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 		builder.WriteString("error: " + err.Error())
 		return builder.String(), err
 	}
-	printed := 0
+	seqNum := 0
+	now := time.Now()
 	for _, p := range payloads {
 		err := p.Error()
 		if err != nil {
@@ -42,11 +43,11 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 		if err != nil {
 			builder.WriteString(err.Error())
 		} else {
+			seqNum++
 			payloadStr, headerStr := p.Lines(), header.Lines()
-			output.WriteToFile(payloadStr, headerStr, time.Now())
-			if printed < nPrintedHosts {
-				printed++
-				builder.WriteString(fmt.Sprintf("[Host %d]\n", printed))
+			output.WriteToFile(payloadStr, headerStr, seqNum, now)
+			if seqNum <= nPrintedHosts {
+				builder.WriteString(fmt.Sprintf("[Host %d]\n", seqNum))
 				builder.WriteString(payloadStr)
 				builder.WriteString("[parsed]\n")
 				builder.WriteString(headerStr)

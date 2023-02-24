@@ -14,6 +14,8 @@ func TestWriteToFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	seqNum := 0
+	now := time.Now()
 	for _, p := range payloads {
 		err := p.Error()
 		if err != nil {
@@ -24,7 +26,8 @@ func TestWriteToFile(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		} else {
-			WriteToFile(p.Lines(), header.Lines(), time.Now())
+			seqNum++
+			WriteToFile(p.Lines(), header.Lines(), seqNum, now)
 		}
 	}
 }
