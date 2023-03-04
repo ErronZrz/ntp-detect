@@ -27,7 +27,7 @@ func TestWriteToFile(t *testing.T) {
 			t.Error(err)
 		} else {
 			seqNum++
-			WriteToFile(p.Lines(), header.Lines(), seqNum, now)
+			WriteToFile(p.Lines(), header.Lines(), seqNum, p.RcvTime(), now)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 		} else {
 			seqNum++
 			payloadStr, headerStr := p.Lines(), header.Lines()
-			output.WriteToFile(payloadStr, headerStr, seqNum, now)
+			output.WriteToFile(payloadStr, headerStr, seqNum, p.RcvTime(), now)
 			if seqNum <= nPrintedHosts {
 				builder.WriteString(fmt.Sprintf("[Host %d]\n", seqNum))
 				builder.WriteString(payloadStr)

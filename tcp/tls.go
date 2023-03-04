@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-func IsTLSEnabled(ip string, port int, serverName string) bool {
-	conn, err := net.Dial("tcp", ip+":"+strconv.Itoa(port))
+func IsTLSEnabled(host string, port int, serverName string) bool {
+	conn, err := net.Dial("tcp", host+":"+strconv.Itoa(port))
 	if err != nil {
 		fmt.Println(err)
 		return false

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	configPath       = "../config/"
+	configPath       = "../resource/"
 	timeoutKey       = "detection.rcv_header.timeout"
 	batchSizeKey     = "detection.send_udp.batch_size"
 	defaultTimeout   = 3000
@@ -35,7 +35,7 @@ func init() {
 	viper.SetDefault(batchSizeKey, defaultBatchSize)
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading config file: %s", err)
+		fmt.Printf("error reading resource file: %s", err)
 	}
 	var milli = time.Duration(viper.GetInt64(timeoutKey))
 	if milli == 0 {

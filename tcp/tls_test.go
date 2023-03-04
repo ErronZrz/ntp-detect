@@ -4,7 +4,7 @@ import "testing"
 
 func TestIsTLSEnabled(t *testing.T) {
 	var tests = []struct {
-		ip         string
+		host       string
 		port       int
 		serverName string
 		want       bool
@@ -19,8 +19,8 @@ func TestIsTLSEnabled(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if got := IsTLSEnabled(test.ip, test.port, test.serverName); got != test.want {
-			t.Errorf("IsTLSEnabled(%s, %d) = %t", test.ip, test.port, got)
+		if got := IsTLSEnabled(test.host, test.port, test.serverName); got != test.want {
+			t.Errorf("IsTLSEnabled(%s, %d) = %t", test.host, test.port, got)
 		}
 	}
 }

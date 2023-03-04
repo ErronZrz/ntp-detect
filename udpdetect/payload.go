@@ -56,6 +56,10 @@ func (p *RcvPayload) Lines() string {
 	return buf.String()
 }
 
+func (p *RcvPayload) RcvTime() time.Time {
+	return p.rcvTime
+}
+
 func durationToStr(d time.Duration) string {
 	negative := d < 0
 	us := d.Nanoseconds() / 1000

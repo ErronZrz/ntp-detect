@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	configPath         = "../config/"
+	configPath         = "../resource/"
 	outputPathKey      = "output.dir_path"
 	fileTimeFormat     = "/2006-01-02_15-04-05.txt"
 	dividingLineFormat = "------------ 15:04:05.000 ------------\n"
@@ -23,11 +23,11 @@ func init() {
 	viper.SetConfigName("properties")
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading config file: %s", err)
+		fmt.Printf("error reading resource file: %s", err)
 	}
 }
 
-func WriteToFile(raw, parsed string, seq int, now time.Time) {
+func WriteToFile(raw, parsed string, seq int, now, rcvTime time.Time) {
 	dirPath := viper.GetString(outputPathKey)
 
 	filePath := dirPath + now.Format(fileTimeFormat)
@@ -64,7 +64,7 @@ func WriteToFile(raw, parsed string, seq int, now time.Time) {
 		return
 	}
 
-	dividingLine := time.Now().Format(dividingLineFormat)
+	dividingLine := rcvTime.Format(dividingLineFormat)
 	_, err = writer.WriteString(dividingLine)
 	if err != nil {
 		fmt.Printf("error writing string `%s`: %s", dividingLine, err)

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	configPath  = "../config/"
+	configPath  = "../resource/"
 	dbPathKey   = "ip2region.db_path"
 	unknownFlag = "未知地区"
 	privateFlag = "内网地址"
@@ -31,7 +31,7 @@ func init() {
 	viper.SetConfigName("properties")
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading config file: %s", err)
+		fmt.Printf("error reading resource file: %s", err)
 	}
 	filePath := viper.GetString(dbPathKey)
 	buf, err := xdb.LoadContentFromFile(filePath)
