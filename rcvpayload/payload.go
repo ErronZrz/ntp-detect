@@ -1,4 +1,4 @@
-package udpdetect
+package rcvpayload
 
 import (
 	"active/utils"
@@ -9,44 +9,36 @@ import (
 )
 
 type RcvPayload struct {
-	host     string
-	port     int
-	err      error
-	len      int
-	sendTime time.Time
-	rcvTime  time.Time
-	rcvData  []byte
-}
-
-func (p *RcvPayload) Error() error {
-	return p.err
-}
-
-func (p *RcvPayload) Bytes() []byte {
-	return p.rcvData
+	Host     string
+	Port     int
+	Err      error
+	Len      int
+	SendTime time.Time
+	RcvTime  time.Time
+	RcvData  []byte
 }
 
 func (p *RcvPayload) Print() {
-	if p.err != nil {
-		fmt.Println(p.err)
+	if p.Err != nil {
+		fmt.Println(p.Err)
 	} else {
 		fmt.Printf(p.Lines())
 	}
 }
 
 func (p *RcvPayload) Lines() string {
-	s := fmt.Sprintf("%d bytes received from %s:%d (%s):\n", p.len, p.host, p.port, utils.RegionOf(p.host))
+	s := fmt.Sprintf("%d bytes received from %s:%d (%s):\n", p.Len, p.Host, p.Port, utils.RegionOf(p.Host))
 	buf := bytes.NewBufferString(s)
 	for i := 0; i < 3; i++ {
-		for _, b := range p.rcvData[i<<4 : (i+1)<<4] {
+		for _, b := range p.RcvData[i<<4 : (i+1)<<4] {
 			buf.WriteString(fmt.Sprintf("%02X ", b))
 		}
 		buf.WriteByte('\n')
 	}
 	// T2 - T1
-	sendDelay := utils.CalculateDelay(p.rcvData[32:40], p.sendTime)
+	sendDelay := utils.CalculateDelay(p.RcvData[32:40], p.SendTime)
 	// T4 - T3
-	rcvDelay := -utils.CalculateDelay(p.rcvData[40:48], p.rcvTime)
+	rcvDelay := -utils.CalculateDelay(p.RcvData[40:48], p.RcvTime)
 	avgDelay := (sendDelay + rcvDelay) / 2
 	offset := (sendDelay - rcvDelay) / 2
 	buf.WriteString(fmt.Sprintf("Send delay:    %s\n", durationToStr(sendDelay)))
@@ -54,10 +46,6 @@ func (p *RcvPayload) Lines() string {
 	buf.WriteString(fmt.Sprintf("Average delay: %s\n", durationToStr(avgDelay)))
 	buf.WriteString(fmt.Sprintf("Offset:        %s\n", durationToStr(offset)))
 	return buf.String()
-}
-
-func (p *RcvPayload) RcvTime() time.Time {
-	return p.rcvTime
 }
 
 func durationToStr(d time.Duration) string {

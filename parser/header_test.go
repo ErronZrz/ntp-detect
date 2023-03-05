@@ -12,12 +12,12 @@ func TestParseHeader(t *testing.T) {
 		t.Error(err)
 	}
 	for _, p := range payloads {
-		err := p.Error()
+		err := p.Err
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		data := p.Bytes()
+		data := p.RcvData
 		p.Print()
 		header, err := ParseHeader(data)
 		if err != nil {

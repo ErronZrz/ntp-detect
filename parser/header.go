@@ -27,7 +27,7 @@ type Header struct {
 type stepFunc func([]byte, *Header) error
 
 const (
-	headerLength = 48
+	HeaderLength = 48
 )
 
 const (
@@ -55,7 +55,7 @@ var (
 )
 
 func ParseHeader(data []byte) (*Header, error) {
-	if len(data) != headerLength {
+	if len(data) != HeaderLength {
 		for _, b := range data {
 			fmt.Printf("%02X", b)
 		}

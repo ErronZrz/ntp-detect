@@ -1,6 +1,13 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
+
+const (
+	timeFormat = "2006-01-02 15:04:05"
+)
 
 func TestRegionOf(t *testing.T) {
 	var tests = []struct {
@@ -23,5 +30,14 @@ func TestRegionOf(t *testing.T) {
 		if got := RegionOf(test.input); got != test.want {
 			t.Errorf("RegionOf(%s) = %s", test.input, got)
 		}
+	}
+}
+
+func TestVariableData(t *testing.T) {
+	want := time.Now().UTC().Format(timeFormat)
+	data := VariableData()
+	got := FormatTimestamp(data[40:])[:len(timeFormat)]
+	if got != want {
+		t.Errorf("VariableData timestamp: " + got)
 	}
 }

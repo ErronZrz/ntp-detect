@@ -4,6 +4,12 @@ detection:
   rcv_header:
     timeout: 500
 
+async:
+  local_port: 11123
+  read:
+    check_interval: 100
+    timeout: 1000
+
 ip2region:
   db_path: D:/Desktop/Detect/ip2region.xdb
 

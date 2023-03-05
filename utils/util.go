@@ -13,19 +13,31 @@ import (
 )
 
 const (
-	configPath  = "../resource/"
-	dbPathKey   = "ip2region.db_path"
-	unknownFlag = "未知地区"
-	privateFlag = "内网地址"
-	timeFormat  = "2006-01-02 15:04:05"
+	configPath    = "../resource/"
+	dbPathKey     = "ip2region.db_path"
+	unknownFlag   = "未知地区"
+	privateFlag   = "内网地址"
+	preciseFormat = "2006-01-02 15:04:05.000000 UTC"
 )
 
 var (
 	startingPoint = time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)
 	searcher      *xdb.Searcher
+	fixedData     []byte
+	variableData  []byte
 )
 
 func init() {
+	fixedData = []byte{
+		0xDB, 0x00, 0x04, 0xFA, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+	}
+	variableData = []byte{
+		0xDB, 0x00, 0x04, 0xFA, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+	}
 	viper.AddConfigPath(configPath)
 	viper.SetConfigType("yaml")
 	viper.SetConfigName("properties")
@@ -39,6 +51,10 @@ func init() {
 		fmt.Printf("failed to load content: %s", err)
 	}
 	searcher, err = xdb.NewWithBuffer(buf)
+}
+
+func FixedData() []byte {
+	return fixedData
 }
 
 func FromInt8(i int8) string {
@@ -93,18 +109,30 @@ func RegionOf(ipStr string) string {
 func CalculateDelay(timestamp []byte, another time.Time) time.Duration {
 	t := binary.BigEndian.Uint64(timestamp)
 	seconds := int64(t >> 32)
-	nanoSeconds := int64((t & 0xFFFF_FFFF) * 1_000_000_000 / (1 << 32))
-	d := startingPoint.Add(time.Duration(seconds) * time.Second).Add(time.Duration(nanoSeconds))
+	nano := (int64(t&0xFFFF_FFFF) * int64(time.Second)) >> 32
+	d := startingPoint.Add(time.Duration(seconds) * time.Second).Add(time.Duration(nano))
 	delay := d.Sub(another)
 	return delay
 }
 
 func FormatTimestamp(timestamp []byte) string {
+	return ConvertTimestamp(timestamp).Format(preciseFormat)
+}
+
+func ConvertTimestamp(timestamp []byte) time.Time {
 	intPart := binary.BigEndian.Uint32(timestamp[:4])
 	fracPart := binary.BigEndian.Uint32(timestamp[4:])
 	intTime := startingPoint.Add(time.Duration(intPart) * time.Second)
-	intFormat := intTime.Format(timeFormat)
-	fracTime := float64(fracPart) / (1 << 32)
-	fracFormat := strconv.FormatFloat(fracTime, 'f', 6, 64)
-	return fmt.Sprintf("%s%s UTC", intFormat, fracFormat[1:])
+	fracDuration := (time.Duration(fracPart) * time.Second) >> 32
+	return intTime.Add(fracDuration)
+}
+
+func VariableData() []byte {
+	d := time.Now().Sub(startingPoint)
+	seconds := d / time.Second
+	high32 := seconds << 32
+	nano := d - seconds*time.Second
+	low32 := (nano << 32) / time.Second
+	binary.BigEndian.PutUint64(variableData[40:], uint64(high32|low32))
+	return variableData
 }
