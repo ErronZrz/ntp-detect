@@ -42,7 +42,7 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 	if err != nil {
 		_, _ = fmt.Fprint(os.Stderr, err)
 	}
-	return generateResult(payloads), nil
+	return generateResult(payloads, "timesync "+address), nil
 }
 
 func executeAsync(cmd *cobra.Command, args []string) (string, error) {
@@ -60,10 +60,10 @@ func executeAsync(cmd *cobra.Command, args []string) (string, error) {
 	if err != nil {
 		_, _ = fmt.Fprint(os.Stderr, err)
 	}
-	return generateResult(payloads), nil
+	return generateResult(payloads, "async "+address), nil
 }
 
-func generateResult(payloads []*rcvpayload.RcvPayload) string {
+func generateResult(payloads []*rcvpayload.RcvPayload, cmd string) string {
 	seqNum := 0
 	now := time.Now()
 	var builder strings.Builder
@@ -80,7 +80,7 @@ func generateResult(payloads []*rcvpayload.RcvPayload) string {
 		} else {
 			seqNum++
 			payloadStr, headerStr := p.Lines(), header.Lines()
-			output.WriteToFile(payloadStr, headerStr, seqNum, p.RcvTime, now)
+			output.WriteToFile(payloadStr, headerStr, cmd, seqNum, p.RcvTime, now)
 			if seqNum <= nPrintedHosts {
 				builder.WriteString(fmt.Sprintf("[Host %d]\n", seqNum))
 				builder.WriteString(payloadStr)

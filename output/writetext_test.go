@@ -10,7 +10,8 @@ import (
 )
 
 func TestWriteToFile(t *testing.T) {
-	payloads, err := udpdetect.DialNetworkNTP("203.107.6.0/24")
+	cidr := "203.107.6.0/24"
+	payloads, err := udpdetect.DialNetworkNTP(cidr)
 	// fmt.Println(payloads)
 	if err != nil {
 		t.Error(err)
@@ -28,13 +29,14 @@ func TestWriteToFile(t *testing.T) {
 			t.Error(err)
 		} else {
 			seqNum++
-			WriteToFile(p.Lines(), header.Lines(), seqNum, p.RcvTime, now)
+			WriteToFile(p.Lines(), header.Lines(), "test timesync "+cidr, seqNum, p.RcvTime, now)
 		}
 	}
 }
 
 func TestAsyncWriteToFile(t *testing.T) {
-	payloads, err := async.DialNetworkNTP("203.107.6.0/24")
+	cidr := "203.107.6.0/24"
+	payloads, err := async.DialNetworkNTP(cidr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,7 +53,7 @@ func TestAsyncWriteToFile(t *testing.T) {
 			t.Error(err)
 		} else {
 			seqNum++
-			WriteToFile(p.Lines(), header.Lines(), seqNum, p.RcvTime, now)
+			WriteToFile(p.Lines(), header.Lines(), "test async "+cidr, seqNum, p.RcvTime, now)
 		}
 	}
 }

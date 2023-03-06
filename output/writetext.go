@@ -6,13 +6,14 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 const (
 	configPath         = "../resource/"
 	outputPathKey      = "output.dir_path"
-	fileTimeFormat     = "/2006-01-02_15-04-05.txt"
+	fileTimeFormat     = "/2006-01-02_15-04-05_"
 	dividingLineFormat = "------------ 15:04:05.000 ------------\n"
 	beforeParsed       = "--- parsed ---\n"
 )
@@ -27,10 +28,11 @@ func init() {
 	}
 }
 
-func WriteToFile(raw, parsed string, seq int, rcvTime, now time.Time) {
+func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
 	dirPath := viper.GetString(outputPathKey)
+	cmd = strings.Replace(cmd, "/", "_", 1)
 
-	filePath := dirPath + now.Format(fileTimeFormat)
+	filePath := dirPath + now.Format(fileTimeFormat) + cmd + ".txt"
 
 	var file *os.File
 

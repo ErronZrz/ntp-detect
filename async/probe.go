@@ -16,14 +16,17 @@ const (
 	localPortKey         = "async.local_port"
 	checkIntervalKey     = "async.read.check_interval"
 	timeoutKey           = "async.read.timeout"
+	haltTimeKey          = "async.send.halt_time"
 	defaultLocalPort     = 11123
 	defaultCheckInterval = 1000
 	defaultTimeout       = 5000
+	defaultHaltTime      = 0
 )
 
 var (
 	checkInterval time.Duration
 	timeout       time.Duration
+	haltTime      time.Duration
 	localPort     int
 	sharedConn    *net.UDPConn
 	localAddr     *net.UDPAddr
@@ -36,6 +39,7 @@ func init() {
 	viper.SetDefault(localPortKey, defaultLocalPort)
 	viper.SetDefault(checkIntervalKey, defaultCheckInterval)
 	viper.SetDefault(timeoutKey, defaultTimeout)
+	viper.SetDefault(haltTimeKey, defaultHaltTime)
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Printf("err reading resource file: %s", err)
@@ -43,6 +47,7 @@ func init() {
 	localPort = viper.GetInt(localPortKey)
 	checkInterval = time.Duration(viper.GetInt64(checkIntervalKey)) * time.Millisecond
 	timeout = time.Duration(viper.GetInt64(timeoutKey)) * time.Millisecond
+	haltTime = time.Duration(viper.GetInt64(haltTimeKey)) * time.Millisecond
 
 	localAddr = &net.UDPAddr{Port: localPort}
 }
@@ -102,6 +107,9 @@ func writeNetWorkNTP(cidr string, conn *net.UDPConn, done chan<- struct{}, errCh
 	}
 	for generator.HasNext() {
 		probeNext(generator.NextHost(), conn, errChan)
+		if haltTime > 0 {
+			<-time.After(haltTime)
+		}
 	}
 }
 
