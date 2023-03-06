@@ -25,6 +25,8 @@ var (
 	checkInterval time.Duration
 	timeout       time.Duration
 	localPort     int
+	sharedConn    *net.UDPConn
+	localAddr     *net.UDPAddr
 )
 
 func init() {
@@ -41,6 +43,8 @@ func init() {
 	localPort = viper.GetInt(localPortKey)
 	checkInterval = time.Duration(viper.GetInt64(checkIntervalKey)) * time.Millisecond
 	timeout = time.Duration(viper.GetInt64(timeoutKey)) * time.Millisecond
+
+	localAddr = &net.UDPAddr{Port: localPort}
 }
 
 func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
@@ -66,8 +70,19 @@ func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
 	}(ctx, errChan)
 
 	res := make([]*rcvpayload.RcvPayload, 0)
-	go writeNetWorkNTP(cidr, done, errChan)
-	go readNetworkNTP(ctx, cidr, &res, done)
+
+	var err error
+	sharedConn, err = net.ListenUDP("udp", localAddr)
+	if err != nil {
+		errChan <- err
+	}
+
+	defer func() {
+		_ = sharedConn.Close()
+	}()
+
+	go writeNetWorkNTP(cidr, sharedConn, done, errChan)
+	go readNetworkNTP(ctx, cidr, sharedConn, &res, done)
 	<-done
 	<-time.After(timeout)
 	cancel()
@@ -75,38 +90,29 @@ func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
 	return res, nil
 }
 
-func writeNetWorkNTP(cidr string, done chan<- struct{}, errChan chan<- error) {
+func writeNetWorkNTP(cidr string, conn *net.UDPConn, done chan<- struct{}, errChan chan<- error) {
 	defer func() {
 		done <- struct{}{}
 	}()
+
 	generator, err := addr.NewAddrGenerator(cidr)
 	if err != nil {
 		errChan <- err
 		return
 	}
 	for generator.HasNext() {
-		probeNext(generator.NextHost(), errChan)
+		probeNext(generator.NextHost(), conn, errChan)
 	}
 }
 
-func probeNext(host string, errChan chan<- error) {
-	udpAddr, err := net.ResolveUDPAddr("udp", host+":123")
+func probeNext(host string, conn *net.UDPConn, errChan chan<- error) {
+	remoteAddr, err := net.ResolveUDPAddr("udp", host+":123")
 	if err != nil {
 		errChan <- err
 		return
 	}
 
-	conn, err := net.DialUDP("udp", &net.UDPAddr{Port: localPort}, udpAddr)
-	if err != nil {
-		errChan <- err
-		return
-	}
-
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	_, err = conn.Write(utils.VariableData())
+	_, err = conn.WriteToUDP(utils.VariableData(), remoteAddr)
 	if err != nil {
 		errChan <- err
 		return

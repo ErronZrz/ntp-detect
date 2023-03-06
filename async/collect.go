@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-func readNetworkNTP(ctx context.Context, cidr string, payloads *[]*rcvpayload.RcvPayload, done chan<- struct{}) {
+func readNetworkNTP(ctx context.Context, cidr string, conn *net.UDPConn,
+	payloads *[]*rcvpayload.RcvPayload, done chan<- struct{}) {
 	defer func() {
 		done <- struct{}{}
 	}()
@@ -20,24 +21,6 @@ func readNetworkNTP(ctx context.Context, cidr string, payloads *[]*rcvpayload.Rc
 		fmt.Println(err)
 		return
 	}
-
-	listenAddr, err := net.ResolveUDPAddr("udp", ":0")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	conn, err := net.ListenUDP("udp", listenAddr)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func() {
-		err := conn.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
 
 	buf := make([]byte, 128)
 
