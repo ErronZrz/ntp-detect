@@ -27,7 +27,7 @@ func init() {
 	}
 }
 
-func WriteToFile(raw, parsed string, seq int, now, rcvTime time.Time) {
+func WriteToFile(raw, parsed string, seq int, rcvTime, now time.Time) {
 	dirPath := viper.GetString(outputPathKey)
 
 	filePath := dirPath + now.Format(fileTimeFormat)

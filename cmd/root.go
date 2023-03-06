@@ -17,12 +17,13 @@ var (
 
 func init() {
 	rootCmd.AddCommand(timeSyncCmd)
+	rootCmd.AddCommand(asyncCmd)
 }
 
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		fmt.Println(err)
+		_, _ = fmt.Fprint(os.Stderr, err)
 	}
 }
 

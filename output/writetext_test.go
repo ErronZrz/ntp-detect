@@ -34,7 +34,7 @@ func TestWriteToFile(t *testing.T) {
 }
 
 func TestAsyncWriteToFile(t *testing.T) {
-	payloads, err := async.DialNetworkNTP("203.107.6.0/24")
+	payloads, err := async.DialNetworkNTP("203.107.6.0/12")
 	if err != nil {
 		t.Error(err)
 	}

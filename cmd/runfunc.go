@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"active/async"
 	"active/output"
 	"active/parser"
 	"active/rcvpayload"
@@ -8,19 +9,29 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
+	if nPrintedHosts > 128 {
+		nPrintedHosts = 128
+	}
 	cmdName := cmd.Name()
 	if args == nil || len(args) == 0 {
 		return "", errors.New("command `timesync` missing arguments")
 	}
 	address := args[0]
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("Ready to run %s.\n    address: %s\n    num of goroutines: %d\n"+
-		"    num of printed hosts: %d\n\n\n\n", cmdName, address, nGoroutines, nPrintedHosts))
+	var ngStr string
+	if nGoroutines <= 0 {
+		ngStr = "auto"
+	} else {
+		ngStr = strconv.Itoa(nGoroutines)
+	}
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run %s.\n    address: %s\n    num of goroutines: %s\n"+
+		"    num of printed hosts: %d\n\n\n\n", cmdName, address, ngStr, nPrintedHosts)
 	var payloads []*rcvpayload.RcvPayload
 	var err error
 	if nGoroutines <= 0 {
@@ -29,11 +40,34 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 		payloads, err = udpdetect.DialNetworkNTPWithBatchSize(address, nGoroutines)
 	}
 	if err != nil {
-		builder.WriteString("error: " + err.Error())
-		return builder.String(), err
+		_, _ = fmt.Fprint(os.Stderr, err)
 	}
+	return generateResult(payloads), nil
+}
+
+func executeAsync(cmd *cobra.Command, args []string) (string, error) {
+	if nPrintedHosts > 128 {
+		nPrintedHosts = 128
+	}
+	cmdName := cmd.Name()
+	if args == nil || len(args) == 0 {
+		return "", errors.New("command `async` missing arguments")
+	}
+	address := args[0]
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run %s.\n    address: %s\n    "+
+		"num of printed hosts: %d\n\n\n\n", cmdName, address, nPrintedHosts)
+	payloads, err := async.DialNetworkNTP(address)
+	if err != nil {
+		_, _ = fmt.Fprint(os.Stderr, err)
+	}
+	return generateResult(payloads), nil
+}
+
+func generateResult(payloads []*rcvpayload.RcvPayload) string {
 	seqNum := 0
 	now := time.Now()
+	var builder strings.Builder
+
 	for _, p := range payloads {
 		err := p.Err
 		if err != nil {
@@ -55,5 +89,6 @@ func executeTimeSync(cmd *cobra.Command, args []string) (string, error) {
 			}
 		}
 	}
-	return builder.String(), nil
+
+	return builder.String()
 }
