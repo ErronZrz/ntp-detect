@@ -21,7 +21,13 @@ func readNetworkNTP(ctx context.Context, cidr string, payloads *[]*rcvpayload.Rc
 		return
 	}
 
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: localPort})
+	listenAddr, err := net.ResolveUDPAddr("udp", ":0")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	conn, err := net.ListenUDP("udp", listenAddr)
 	if err != nil {
 		fmt.Println(err)
 		return
