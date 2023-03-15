@@ -1,6 +1,16 @@
 package tcp
 
-import "testing"
+import (
+	"active/utils"
+	"fmt"
+	"testing"
+)
+
+var (
+	reqBytes = []byte{
+		0x80, 0x01, 0x00, 0x02, 0x00, 0x00, 0x80, 0x04, 0x00, 0x02, 0x00, 0x0F, 0x80, 0x00, 0x00, 0x00,
+	}
+)
 
 func TestIsTLSEnabled(t *testing.T) {
 	var tests = []struct {
@@ -23,4 +33,18 @@ func TestIsTLSEnabled(t *testing.T) {
 			t.Errorf("IsTLSEnabled(%s, %d) = %t", test.host, test.port, got)
 		}
 	}
+}
+
+func TestWriteReadTLS(t *testing.T) {
+	res, err := WriteReadTLS("194.58.207.74", 4460, "sth2.nts.netnod.se", reqBytes)
+	if err != nil {
+		t.Error(err)
+	}
+	n := len(res)
+	if n == 0 {
+		fmt.Println("empty response")
+		return
+	}
+	fmt.Printf("Received %d bytes:\n", n)
+	fmt.Print(utils.PrintBytes(res, 16))
 }

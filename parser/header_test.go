@@ -7,11 +7,11 @@ import (
 )
 
 func TestParseHeader(t *testing.T) {
-	payloads, err := udpdetect.DialNetworkNTP("203.107.6.0/24")
-	if err != nil {
-		t.Error(err)
+	dataCh := udpdetect.DialNetworkNTP("203.107.6.0/24")
+	if dataCh == nil {
+		fmt.Println("dataCh is nil")
 	}
-	for _, p := range payloads {
+	for p, ok := <-dataCh; ok; p, ok = <-dataCh {
 		err := p.Err
 		if err != nil {
 			fmt.Println(err)

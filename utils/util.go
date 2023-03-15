@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
@@ -135,4 +136,47 @@ func VariableData() []byte {
 	low32 := (nano << 32) / time.Second
 	binary.BigEndian.PutUint64(variableData[40:], uint64(high32|low32))
 	return variableData
+}
+
+func DurationToStr(t1, t2 time.Time) string {
+	d := t2.Sub(t1)
+	if d < 0 {
+		return "-" + DurationToStr(t2, t1)
+	}
+
+	if d < time.Microsecond {
+		return fmt.Sprintf("%dns", d.Nanoseconds())
+	}
+	if d < time.Millisecond {
+		return fmt.Sprintf("%dμs", d.Microseconds())
+	}
+	if d < 10*time.Second {
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
+	d = d.Round(time.Second)
+	h, m, s := d/time.Hour, (d/time.Minute)%60, (d/time.Second)%60
+	if h > 0 {
+		return fmt.Sprintf("%dh%dm%ds", h, m, s)
+	} else if m > 0 {
+		return fmt.Sprintf("%dm%ds", m, s)
+	}
+	return fmt.Sprintf("%ds", s)
+}
+
+func PrintBytes(data []byte, rowLen int) string {
+	buf := new(bytes.Buffer)
+	rows := len(data) / rowLen
+	for i := 0; i < rows; i++ {
+		for _, b := range data[i*rowLen : (i+1)*rowLen] {
+			buf.WriteString(fmt.Sprintf("%02X ", b))
+		}
+		buf.WriteByte('\n')
+	}
+	if len(data) > rows*rowLen {
+		for _, b := range data[rows*rowLen:] {
+			buf.WriteString(fmt.Sprintf("%02X ", b))
+		}
+		buf.WriteByte('\n')
+	}
+	return buf.String()
 }

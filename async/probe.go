@@ -29,6 +29,7 @@ var (
 	haltTime      time.Duration
 	localPort     int
 	sharedConn    *net.UDPConn
+	doneCh        chan struct{}
 	localAddr     *net.UDPAddr
 )
 
@@ -52,17 +53,10 @@ func init() {
 	localAddr = &net.UDPAddr{Port: localPort}
 }
 
-func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
+func DialNetworkNTP(cidr string) <-chan *rcvpayload.RcvPayload {
 	errChan := make(chan error)
-	done := make(chan struct{})
+	doneCh = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
-	defer func() {
-		select {
-		case <-ctx.Done():
-		default:
-			cancel()
-		}
-	}()
 	go func(ctx context.Context, errChan <-chan error) {
 		for {
 			select {
@@ -74,7 +68,7 @@ func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
 		}
 	}(ctx, errChan)
 
-	res := make([]*rcvpayload.RcvPayload, 0)
+	dataCh := make(chan *rcvpayload.RcvPayload, 1024)
 
 	var err error
 	sharedConn, err = net.ListenUDP("udp", localAddr)
@@ -82,22 +76,25 @@ func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
 		errChan <- err
 	}
 
-	defer func() {
+	go writeNetWorkNTP(cidr, errChan)
+	go readNetworkNTP(ctx, cidr, dataCh)
+
+	go func() {
+		<-doneCh
+		<-time.After(timeout)
+		cancel()
+		<-doneCh
+		close(dataCh)
+		<-time.After(time.Second)
 		_ = sharedConn.Close()
 	}()
 
-	go writeNetWorkNTP(cidr, sharedConn, done, errChan)
-	go readNetworkNTP(ctx, cidr, sharedConn, &res, done)
-	<-done
-	<-time.After(timeout)
-	cancel()
-	<-done
-	return res, nil
+	return dataCh
 }
 
-func writeNetWorkNTP(cidr string, conn *net.UDPConn, done chan<- struct{}, errChan chan<- error) {
+func writeNetWorkNTP(cidr string, errChan chan<- error) {
 	defer func() {
-		done <- struct{}{}
+		doneCh <- struct{}{}
 	}()
 
 	generator, err := addr.NewAddrGenerator(cidr)
@@ -106,21 +103,21 @@ func writeNetWorkNTP(cidr string, conn *net.UDPConn, done chan<- struct{}, errCh
 		return
 	}
 	for generator.HasNext() {
-		probeNext(generator.NextHost(), conn, errChan)
+		probeNext(generator.NextHost(), errChan)
 		if haltTime > 0 {
 			<-time.After(haltTime)
 		}
 	}
 }
 
-func probeNext(host string, conn *net.UDPConn, errChan chan<- error) {
+func probeNext(host string, errChan chan<- error) {
 	remoteAddr, err := net.ResolveUDPAddr("udp", host+":123")
 	if err != nil {
 		errChan <- err
 		return
 	}
 
-	_, err = conn.WriteToUDP(utils.VariableData(), remoteAddr)
+	_, err = sharedConn.WriteToUDP(utils.VariableData(), remoteAddr)
 	if err != nil {
 		errChan <- err
 		return

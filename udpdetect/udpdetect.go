@@ -4,7 +4,6 @@ import (
 	"active/addr"
 	"active/rcvpayload"
 	"active/utils"
-	"context"
 	"fmt"
 	"github.com/spf13/viper"
 	"net"
@@ -41,16 +40,17 @@ func init() {
 	timeout = time.Millisecond * milli
 }
 
-func DialNetworkNTPWithBatchSize(cidr string, batchSize int) ([]*rcvpayload.RcvPayload, error) {
+func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *rcvpayload.RcvPayload {
 	generator, err := addr.NewAddrGenerator(cidr)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	num := generator.TotalNum()
-	dataCh := make(chan *rcvpayload.RcvPayload, num)
-	res := make([]*rcvpayload.RcvPayload, 0, num)
-	ctx, cancel := context.WithCancel(context.Background())
-	go handleChan(ctx, dataCh, &res)
+	chSize := 1024
+	if num < chSize {
+		chSize = num
+	}
+	dataCh := make(chan *rcvpayload.RcvPayload, chSize)
 	wg := &sync.WaitGroup{}
 	fmt.Printf("Num of addresses: %d\n", num)
 	wg.Add(num)
@@ -66,20 +66,14 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) ([]*rcvpayload.RcvP
 		hostStr := generator.NextHost()
 		go writeToAddr(hostStr+":123", dataCh, wg)
 	}
-	wg.Wait()
-	cancel()
-	close(dataCh)
-	for {
-		if payload, ok := <-dataCh; !ok {
-			break
-		} else {
-			res = append(res, payload)
-		}
-	}
-	return res, nil
+	go func() {
+		wg.Wait()
+		close(dataCh)
+	}()
+	return dataCh
 }
 
-func DialNetworkNTP(cidr string) ([]*rcvpayload.RcvPayload, error) {
+func DialNetworkNTP(cidr string) <-chan *rcvpayload.RcvPayload {
 	return DialNetworkNTPWithBatchSize(cidr, viper.GetInt(batchSizeKey))
 }
 
@@ -92,7 +86,7 @@ func writeToAddr(addr string, ch chan<- *rcvpayload.RcvPayload, wg *sync.WaitGro
 		ch <- payload
 		return
 	}
-	// fmt.Println(udpAddr.String())
+	// fmt.Println(udpAddr.Print())
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
 		payload.Err = err
@@ -122,16 +116,5 @@ func writeToAddr(addr string, ch chan<- *rcvpayload.RcvPayload, wg *sync.WaitGro
 		payload.Len = n
 		payload.RcvData = buf[:n]
 		ch <- payload
-	}
-}
-
-func handleChan(ctx context.Context, ch <-chan *rcvpayload.RcvPayload, res *[]*rcvpayload.RcvPayload) {
-	for {
-		select {
-		case payload := <-ch:
-			*res = append(*res, payload)
-		case <-ctx.Done():
-			break
-		}
 	}
 }

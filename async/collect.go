@@ -11,10 +11,9 @@ import (
 	"time"
 )
 
-func readNetworkNTP(ctx context.Context, cidr string, conn *net.UDPConn,
-	payloads *[]*rcvpayload.RcvPayload, done chan<- struct{}) {
+func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *rcvpayload.RcvPayload) {
 	defer func() {
-		done <- struct{}{}
+		doneCh <- struct{}{}
 	}()
 	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -30,12 +29,12 @@ func readNetworkNTP(ctx context.Context, cidr string, conn *net.UDPConn,
 			// fmt.Println("Done!")
 			return
 		default:
-			err := conn.SetReadDeadline(time.Now().Add(checkInterval))
+			err := sharedConn.SetReadDeadline(time.Now().Add(checkInterval))
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			n, udpAddr, err := conn.ReadFromUDP(buf)
+			n, udpAddr, err := sharedConn.ReadFromUDP(buf)
 			if err != nil {
 				continue
 			}
@@ -55,7 +54,7 @@ func readNetworkNTP(ctx context.Context, cidr string, conn *net.UDPConn,
 			} else {
 				payload.SendTime = utils.ConvertTimestamp(buf[24:32])
 			}
-			*payloads = append(*payloads, payload)
+			dataCh <- payload
 		}
 	}
 }

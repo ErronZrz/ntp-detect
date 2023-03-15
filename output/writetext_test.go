@@ -4,6 +4,7 @@ import (
 	"active/async"
 	"active/parser"
 	"active/udpdetect"
+	"active/utils"
 	"fmt"
 	"testing"
 	"time"
@@ -11,17 +12,17 @@ import (
 
 func TestWriteToFile(t *testing.T) {
 	cidr := "203.107.6.0/24"
-	payloads, err := udpdetect.DialNetworkNTP(cidr)
-	// fmt.Println(payloads)
-	if err != nil {
-		t.Error(err)
+	dataCh := udpdetect.DialNetworkNTP(cidr)
+	if dataCh == nil {
+		fmt.Printf("dataCh is nil")
 	}
+
 	seqNum := 0
 	now := time.Now()
-	for _, p := range payloads {
+	for p, ok := <-dataCh; ok; p, ok = <-dataCh {
 		err := p.Err
 		if err != nil {
-			fmt.Println(err)
+			t.Error(err)
 			continue
 		}
 		header, err := parser.ParseHeader(p.RcvData)
@@ -29,23 +30,25 @@ func TestWriteToFile(t *testing.T) {
 			t.Error(err)
 		} else {
 			seqNum++
-			WriteToFile(p.Lines(), header.Lines(), "test timesync "+cidr, seqNum, p.RcvTime, now)
+			WriteToFile(p.Lines(), header.Lines(), "test_timesync_"+cidr, seqNum, p.RcvTime, now)
 		}
 	}
+	fmt.Printf("%d hosts detected in %s\n", seqNum, utils.DurationToStr(now, time.Now()))
 }
 
 func TestAsyncWriteToFile(t *testing.T) {
 	cidr := "203.107.6.0/24"
-	payloads, err := async.DialNetworkNTP(cidr)
-	if err != nil {
-		t.Error(err)
+	dataCh := async.DialNetworkNTP(cidr)
+	if dataCh == nil {
+		fmt.Printf("dataCh is nil")
 	}
+
 	seqNum := 0
 	now := time.Now()
-	for _, p := range payloads {
+	for p, ok := <-dataCh; ok; p, ok = <-dataCh {
 		err := p.Err
 		if err != nil {
-			fmt.Println(err)
+			t.Error(err)
 			continue
 		}
 		header, err := parser.ParseHeader(p.RcvData)
@@ -53,7 +56,8 @@ func TestAsyncWriteToFile(t *testing.T) {
 			t.Error(err)
 		} else {
 			seqNum++
-			WriteToFile(p.Lines(), header.Lines(), "test async "+cidr, seqNum, p.RcvTime, now)
+			WriteToFile(p.Lines(), header.Lines(), "test_timesync_"+cidr, seqNum, p.RcvTime, now)
 		}
 	}
+	fmt.Printf("%d hosts detected in %s\n", seqNum, utils.DurationToStr(now, time.Now()))
 }
