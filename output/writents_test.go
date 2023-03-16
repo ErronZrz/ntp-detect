@@ -1,13 +1,16 @@
-package nts
+package output
 
 import (
+	"active/nts"
 	"active/parser"
 	"fmt"
 	"testing"
 )
 
-func TestDialNTSKE(t *testing.T) {
-	payload, err := DialNTSKE("194.58.207.74", "sth2.nts.netnod.se", 0x0F)
+func TestWriteNTSToFile(t *testing.T) {
+	host := "194.58.207.74"
+	serverName := "sth2.nts.netnod.se"
+	payload, err := nts.DialNTSKE(host, serverName, 0x0F)
 	if err != nil {
 		t.Error(err)
 		return
@@ -17,12 +20,11 @@ func TestDialNTSKE(t *testing.T) {
 		fmt.Println("empty response")
 		return
 	}
-	payload.Print()
 
 	res, err := parser.ParseNTSResponse(payload.RcvData)
 	if err != nil {
 		t.Error(err)
 	} else {
-		fmt.Print(res.Lines())
+		WriteNTSToFile(payload.Lines(), res.Lines(), host)
 	}
 }

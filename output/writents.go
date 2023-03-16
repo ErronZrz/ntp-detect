@@ -5,17 +5,13 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 )
 
 const (
-	configPath         = "../resource/"
-	outputPathKey      = "output.dir_path"
-	fileTimeFormat     = "/2006-01-02_15-04-05_"
-	dividingLineFormat = "------------ 15:04:05.000 ------------\n"
-	beforeParsed       = "--- parsed ---\n"
+	ntsOutputPathKey      = "output.nts_path"
+	ntsFileTimeFormat     = "/2006-01-02_"
+	ntsDividingLineFormat = "------------ 15:04:05 ------------\n"
 )
 
 func init() {
@@ -28,11 +24,10 @@ func init() {
 	}
 }
 
-func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
-	dirPath := viper.GetString(outputPathKey)
-	cmd = strings.Replace(cmd, "/", "_", 1)
-
-	filePath := dirPath + now.Format(fileTimeFormat) + cmd + ".txt"
+func WriteNTSToFile(raw, parsed, host string) {
+	now := time.Now()
+	dirPath := viper.GetString(ntsOutputPathKey)
+	filePath := dirPath + now.Format(ntsFileTimeFormat) + host + ".txt"
 
 	var file *os.File
 
@@ -54,46 +49,40 @@ func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			fmt.Printf("error closing file %s: %v", filePath, err)
+			fmt.Printf("err closing file %s: %v", filePath, err)
 		}
 	}(file)
 
 	writer := bufio.NewWriter(file)
 
-	_, err = writer.WriteString("#" + strconv.Itoa(seq) + "\n")
-	if err != nil {
-		fmt.Printf("err writing sequence `%d`: %v", seq, err)
-		return
-	}
-
-	dividingLine := rcvTime.Format(dividingLineFormat)
+	dividingLine := now.Format(ntsDividingLineFormat)
 	_, err = writer.WriteString(dividingLine)
 	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", dividingLine, err)
+		fmt.Printf("err writing string `%s`: %v", dividingLine, err)
 		return
 	}
 
 	_, err = writer.WriteString(raw)
 	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", raw, err)
+		fmt.Printf("err writing string `%s`: %v", raw, err)
 		return
 	}
 
 	_, err = writer.WriteString(beforeParsed)
 	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", beforeParsed, err)
+		fmt.Printf("err writing string `%s`: %v", beforeParsed, err)
 		return
 	}
 
 	_, err = writer.WriteString(parsed)
 	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", parsed, err)
+		fmt.Printf("err writing string `%s`: %v", parsed, err)
 		return
 	}
 
 	err = writer.Flush()
 	if err != nil {
-		fmt.Printf("error flushing writer: %v", err)
+		fmt.Printf("error flushing write: %v", err)
 		return
 	}
 }

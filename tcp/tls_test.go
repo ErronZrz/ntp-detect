@@ -39,6 +39,7 @@ func TestWriteReadTLS(t *testing.T) {
 	res, err := WriteReadTLS("194.58.207.74", 4460, "sth2.nts.netnod.se", reqBytes)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	n := len(res)
 	if n == 0 {

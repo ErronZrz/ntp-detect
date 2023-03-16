@@ -2,7 +2,7 @@ package async
 
 import (
 	"active/addr"
-	"active/rcvpayload"
+	"active/payload"
 	"active/utils"
 	"context"
 	"fmt"
@@ -53,7 +53,7 @@ func init() {
 	localAddr = &net.UDPAddr{Port: localPort}
 }
 
-func DialNetworkNTP(cidr string) <-chan *rcvpayload.RcvPayload {
+func DialNetworkNTP(cidr string) <-chan *payload.RcvPayload {
 	errChan := make(chan error)
 	doneCh = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,7 +68,7 @@ func DialNetworkNTP(cidr string) <-chan *rcvpayload.RcvPayload {
 		}
 	}(ctx, errChan)
 
-	dataCh := make(chan *rcvpayload.RcvPayload, 1024)
+	dataCh := make(chan *payload.RcvPayload, 1024)
 
 	var err error
 	sharedConn, err = net.ListenUDP("udp", localAddr)

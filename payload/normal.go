@@ -1,4 +1,4 @@
-package rcvpayload
+package payload
 
 import (
 	"active/utils"

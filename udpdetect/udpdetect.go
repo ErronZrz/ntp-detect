@@ -2,7 +2,7 @@ package udpdetect
 
 import (
 	"active/addr"
-	"active/rcvpayload"
+	"active/payload"
 	"active/utils"
 	"fmt"
 	"github.com/spf13/viper"
@@ -40,7 +40,7 @@ func init() {
 	timeout = time.Millisecond * milli
 }
 
-func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *rcvpayload.RcvPayload {
+func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *payload.RcvPayload {
 	generator, err := addr.NewAddrGenerator(cidr)
 	if err != nil {
 		return nil
@@ -50,7 +50,7 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *rcvpayload.
 	if num < chSize {
 		chSize = num
 	}
-	dataCh := make(chan *rcvpayload.RcvPayload, chSize)
+	dataCh := make(chan *payload.RcvPayload, chSize)
 	wg := &sync.WaitGroup{}
 	fmt.Printf("Num of addresses: %d\n", num)
 	wg.Add(num)
@@ -73,13 +73,13 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *rcvpayload.
 	return dataCh
 }
 
-func DialNetworkNTP(cidr string) <-chan *rcvpayload.RcvPayload {
+func DialNetworkNTP(cidr string) <-chan *payload.RcvPayload {
 	return DialNetworkNTPWithBatchSize(cidr, viper.GetInt(batchSizeKey))
 }
 
-func writeToAddr(addr string, ch chan<- *rcvpayload.RcvPayload, wg *sync.WaitGroup) {
+func writeToAddr(addr string, ch chan<- *payload.RcvPayload, wg *sync.WaitGroup) {
 	defer wg.Done()
-	payload := &rcvpayload.RcvPayload{Host: addr[:len(addr)-4], Port: 123}
+	payload := &payload.RcvPayload{Host: addr[:len(addr)-4], Port: 123}
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		payload.Err = err
