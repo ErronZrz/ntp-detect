@@ -1,11 +1,16 @@
 package parser
 
 import (
+	"active/payload"
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"strconv"
+)
+
+const (
+	defaultNTPPortStr = "123"
 )
 
 var (
@@ -67,6 +72,54 @@ func ParseNTSResponse(data []byte) (*Response, error) {
 
 func (r *Response) Lines() string {
 	return r.buf.String()
+}
+
+func ParseDetectInfo(data []byte, info payload.DetectInfo) error {
+	records, err := retrieveRecords(data)
+	if err != nil {
+		return err
+	}
+	var server, portStr string
+	for _, r := range records {
+		switch r.rType {
+		// AEAD Algorithm
+		case 4:
+			if r.bodyLen > 0 {
+				if r.bodyLen != 2 {
+					return fmt.Errorf("unexpected body length in Warning record: %d", r.bodyLen)
+				}
+				if r.body[0] != 0x00 || r.body[1] == 0x00 || r.body[1] > 0x21 {
+					return fmt.Errorf("unrecognized AEAD algorithm ID in AEAD Algorhithm record: %d",
+						(int(r.body[0])<<8)+int(r.body[1]))
+				}
+				info.AEADList[r.body[1]] = true
+			}
+		// NTPv4 Server
+		case 6:
+			if r.bodyLen == 0 {
+				return errors.New("empty body in NTPv4 Server record")
+			}
+			server = string(r.body)
+		// NTPv4 Port
+		case 7:
+			if r.bodyLen != 2 {
+				return fmt.Errorf("unexpected body length in NTPv4 Port record: %d", r.bodyLen)
+			}
+			port := (int(r.body[0]) << 8) + int(r.body[1])
+			portStr = strconv.Itoa(port)
+		default:
+			continue
+		}
+	}
+
+	if server != "" {
+		if portStr == "" {
+			portStr = defaultNTPPortStr
+		}
+		info.ServerPortSet[server+":"+portStr] = struct{}{}
+	}
+
+	return nil
 }
 
 func retrieveRecords(data []byte) ([]*record, error) {
@@ -170,7 +223,7 @@ func printAEADAlgorithm(r *record, buf *bytes.Buffer) error {
 		return fmt.Errorf("unrecognized AEAD algorithm ID in AEAD Algorhithm record: %d",
 			(int(r.body[0])<<8)+int(r.body[1]))
 	}
-	buf.WriteString(fmt.Sprintf("Algorithm = %s", getAEADName(r.body[1])))
+	buf.WriteString(fmt.Sprintf("Algorithm = %s", payload.GetAEADName(r.body[1])))
 	return nil
 }
 
@@ -188,7 +241,7 @@ func printCookie(r *record, buf *bytes.Buffer) error {
 
 func printServer(r *record, buf *bytes.Buffer) error {
 	if r.bodyLen == 0 {
-		return fmt.Errorf("empty body in NTPv4 Server record: %d", r.bodyLen)
+		return errors.New("empty body in NTPv4 Server record")
 	}
 	buf.WriteString("Server = ")
 	buf.Write(r.body)
