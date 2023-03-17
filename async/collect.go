@@ -1,8 +1,8 @@
 package async
 
 import (
+	"active/datastruct"
 	"active/parser"
-	"active/payload"
 	"active/utils"
 	"context"
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *payload.RcvPayload) {
+func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *datastruct.RcvPayload) {
 	defer func() {
 		doneCh <- struct{}{}
 	}()
@@ -42,7 +42,7 @@ func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *payload.Rcv
 				fmt.Println("IP out of range: " + udpAddr.IP.String())
 				continue
 			}
-			payload := &payload.RcvPayload{
+			payload := &datastruct.RcvPayload{
 				Host:    udpAddr.IP.String(),
 				Port:    udpAddr.Port,
 				Len:     n,

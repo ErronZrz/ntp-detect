@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"active/async"
+	"active/datastruct"
 	"active/output"
 	"active/parser"
-	"active/payload"
 	"active/udpdetect"
 	"active/utils"
 	"errors"
@@ -34,10 +34,10 @@ func executeTimeSync(cmd *cobra.Command, args []string) error {
 	} else {
 		ngStr = strconv.Itoa(nGoroutines)
 	}
-	_, _ = fmt.Fprintf(os.Stdout, "Ready to run %s.\n    address: %s\n    num of goroutines: %s\n"+
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    address: %s\n    num of goroutines: %s\n"+
 		"    num of printed hosts: %d\n\n\n\n", cmdName, address, ngStr, nPrintedHosts)
 
-	var dataCh <-chan *payload.RcvPayload
+	var dataCh <-chan *datastruct.RcvPayload
 	startTime := time.Now()
 	if nGoroutines <= 0 {
 		dataCh = udpdetect.DialNetworkNTP(address)
@@ -63,7 +63,7 @@ func executeAsync(cmd *cobra.Command, args []string) error {
 		return errors.New("command `async` missing arguments")
 	}
 	address := args[0]
-	_, _ = fmt.Fprintf(os.Stdout, "Ready to run %s.\n    address: %s\n    "+
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    address: %s\n    "+
 		"num of printed hosts: %d\n\n\n\n", cmdName, address, nPrintedHosts)
 
 	startTime := time.Now()
@@ -80,7 +80,7 @@ func executeAsync(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printResult(dataCh <-chan *payload.RcvPayload, cmd string) int {
+func printResult(dataCh <-chan *datastruct.RcvPayload, cmd string) int {
 	seqNum := 0
 	now := time.Now()
 

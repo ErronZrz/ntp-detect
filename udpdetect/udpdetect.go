@@ -2,7 +2,7 @@ package udpdetect
 
 import (
 	"active/addr"
-	"active/payload"
+	"active/datastruct"
 	"active/utils"
 	"fmt"
 	"github.com/spf13/viper"
@@ -31,7 +31,8 @@ func init() {
 	viper.SetDefault(batchSizeKey, defaultBatchSize)
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading resource file: %s", err)
+		fmt.Printf("error reading resource file: %v", err)
+		return
 	}
 	milli := time.Duration(viper.GetInt64(timeoutKey))
 	if milli == 0 {
@@ -40,7 +41,7 @@ func init() {
 	timeout = time.Millisecond * milli
 }
 
-func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *payload.RcvPayload {
+func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *datastruct.RcvPayload {
 	generator, err := addr.NewAddrGenerator(cidr)
 	if err != nil {
 		return nil
@@ -50,7 +51,7 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *payload.Rcv
 	if num < chSize {
 		chSize = num
 	}
-	dataCh := make(chan *payload.RcvPayload, chSize)
+	dataCh := make(chan *datastruct.RcvPayload, chSize)
 	wg := &sync.WaitGroup{}
 	fmt.Printf("Num of addresses: %d\n", num)
 	wg.Add(num)
@@ -73,13 +74,13 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *payload.Rcv
 	return dataCh
 }
 
-func DialNetworkNTP(cidr string) <-chan *payload.RcvPayload {
+func DialNetworkNTP(cidr string) <-chan *datastruct.RcvPayload {
 	return DialNetworkNTPWithBatchSize(cidr, viper.GetInt(batchSizeKey))
 }
 
-func writeToAddr(addr string, ch chan<- *payload.RcvPayload, wg *sync.WaitGroup) {
+func writeToAddr(addr string, ch chan<- *datastruct.RcvPayload, wg *sync.WaitGroup) {
 	defer wg.Done()
-	payload := &payload.RcvPayload{Host: addr[:len(addr)-4], Port: 123}
+	payload := &datastruct.RcvPayload{Host: addr[:len(addr)-4], Port: 123}
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		payload.Err = err

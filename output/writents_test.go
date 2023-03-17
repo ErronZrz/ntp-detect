@@ -28,3 +28,15 @@ func TestWriteNTSToFile(t *testing.T) {
 		WriteNTSToFile(payload.Lines(), res.Lines(), host)
 	}
 }
+
+func TestWriteNTSDetectToFile(t *testing.T) {
+	host := "194.58.207.74"
+	serverName := "sth2.nts.netnod.se"
+	payload, err := nts.DetectNTSServer(host, serverName)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	WriteNTSDetectToFile(payload.Lines(), host)
+}

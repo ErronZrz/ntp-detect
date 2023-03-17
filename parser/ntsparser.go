@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"active/payload"
+	"active/datastruct"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -74,7 +74,7 @@ func (r *Response) Lines() string {
 	return r.buf.String()
 }
 
-func ParseDetectInfo(data []byte, info payload.DetectInfo) error {
+func ParseDetectInfo(data []byte, info datastruct.DetectInfo) error {
 	records, err := retrieveRecords(data)
 	if err != nil {
 		return err
@@ -223,7 +223,7 @@ func printAEADAlgorithm(r *record, buf *bytes.Buffer) error {
 		return fmt.Errorf("unrecognized AEAD algorithm ID in AEAD Algorhithm record: %d",
 			(int(r.body[0])<<8)+int(r.body[1]))
 	}
-	buf.WriteString(fmt.Sprintf("Algorithm = %s", payload.GetAEADName(r.body[1])))
+	buf.WriteString(fmt.Sprintf("Algorithm = %s", datastruct.GetAEADName(r.body[1])))
 	return nil
 }
 

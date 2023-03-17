@@ -24,16 +24,22 @@ func init() {
 	viper.SetConfigName("properties")
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading resource file: %s", err)
+		fmt.Printf("error reading resource file: %v", err)
 	}
 }
 
 func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
 	dirPath := viper.GetString(outputPathKey)
 	cmd = strings.Replace(cmd, "/", "_", 1)
-
 	filePath := dirPath + now.Format(fileTimeFormat) + cmd + ".txt"
 
+	seqLine := "#" + strconv.Itoa(seq) + "\n"
+	dividingLine := rcvTime.Format(dividingLineFormat)
+
+	commonWrite(filePath, []string{seqLine, dividingLine, raw, beforeParsed, parsed})
+}
+
+func commonWrite(filePath string, strs []string) {
 	var file *os.File
 
 	_, err := os.Stat(filePath)
@@ -60,40 +66,16 @@ func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
 
 	writer := bufio.NewWriter(file)
 
-	_, err = writer.WriteString("#" + strconv.Itoa(seq) + "\n")
-	if err != nil {
-		fmt.Printf("err writing sequence `%d`: %v", seq, err)
-		return
-	}
-
-	dividingLine := rcvTime.Format(dividingLineFormat)
-	_, err = writer.WriteString(dividingLine)
-	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", dividingLine, err)
-		return
-	}
-
-	_, err = writer.WriteString(raw)
-	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", raw, err)
-		return
-	}
-
-	_, err = writer.WriteString(beforeParsed)
-	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", beforeParsed, err)
-		return
-	}
-
-	_, err = writer.WriteString(parsed)
-	if err != nil {
-		fmt.Printf("error writing string `%s`: %v", parsed, err)
-		return
+	for _, s := range strs {
+		_, err = writer.WriteString(s)
+		if err != nil {
+			fmt.Printf("error writing string %s: %v", s, err)
+			return
+		}
 	}
 
 	err = writer.Flush()
 	if err != nil {
 		fmt.Printf("error flushing writer: %v", err)
-		return
 	}
 }

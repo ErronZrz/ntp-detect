@@ -44,12 +44,13 @@ func init() {
 	viper.SetConfigName("properties")
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("error reading resource file: %s", err)
+		fmt.Printf("error reading resource file: %v", err)
+		return
 	}
 	filePath := viper.GetString(dbPathKey)
 	buf, err := xdb.LoadContentFromFile(filePath)
 	if err != nil {
-		fmt.Printf("failed to load content: %s", err)
+		fmt.Printf("failed to load content: %v", err)
 	}
 	searcher, err = xdb.NewWithBuffer(buf)
 }

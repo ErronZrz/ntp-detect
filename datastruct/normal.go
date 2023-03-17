@@ -1,4 +1,4 @@
-package payload
+package datastruct
 
 import (
 	"active/utils"

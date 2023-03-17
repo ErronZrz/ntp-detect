@@ -1,4 +1,4 @@
-package payload
+package datastruct
 
 var (
 	aeadNames []string

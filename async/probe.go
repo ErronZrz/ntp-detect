@@ -2,7 +2,7 @@ package async
 
 import (
 	"active/addr"
-	"active/payload"
+	"active/datastruct"
 	"active/utils"
 	"context"
 	"fmt"
@@ -43,7 +43,8 @@ func init() {
 	viper.SetDefault(haltTimeKey, defaultHaltTime)
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("err reading resource file: %s", err)
+		fmt.Printf("err reading resource file: %v", err)
+		return
 	}
 	localPort = viper.GetInt(localPortKey)
 	checkInterval = time.Duration(viper.GetInt64(checkIntervalKey)) * time.Millisecond
@@ -53,7 +54,7 @@ func init() {
 	localAddr = &net.UDPAddr{Port: localPort}
 }
 
-func DialNetworkNTP(cidr string) <-chan *payload.RcvPayload {
+func DialNetworkNTP(cidr string) <-chan *datastruct.RcvPayload {
 	errChan := make(chan error)
 	doneCh = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,7 +69,7 @@ func DialNetworkNTP(cidr string) <-chan *payload.RcvPayload {
 		}
 	}(ctx, errChan)
 
-	dataCh := make(chan *payload.RcvPayload, 1024)
+	dataCh := make(chan *datastruct.RcvPayload, 1024)
 
 	var err error
 	sharedConn, err = net.ListenUDP("udp", localAddr)

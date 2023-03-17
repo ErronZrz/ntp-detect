@@ -1,29 +1,51 @@
 package nts
 
 import (
-	"active/payload"
+	"active/datastruct"
 	"crypto/tls"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"net"
 	"time"
 )
 
 const (
-	aesSivCmac256 = 0x0F
-	alpnID        = "ntske/1"
-	exportLabel   = "EXPORTER-network-time-security"
-	keyLength     = 32
-	timeout       = 5 * time.Second
+	aesSivCmac256   = 0x0F
+	alpnID          = "ntske/1"
+	exportLabel     = "EXPORTER-network-time-security"
+	keyLength       = 32
+	configPath      = "../resource/"
+	timeoutKey      = "nts.dial_timeout"
+	haltTimeKey     = "nts.detect.halt_time"
+	defaultTimeout  = 5000
+	defaultHaltTime = 500
 )
 
 var (
 	reqBytes = []byte{
 		0x80, 0x01, 0x00, 0x02, 0x00, 0x00, 0x80, 0x04, 0x00, 0x02, 0x00, 0x0F, 0x80, 0x00, 0x00, 0x00,
 	}
+	timeout  time.Duration
+	haltTime time.Duration
 )
 
-func DialNTSKE(host, serverName string, aeadID byte) (*payload.NTSPayload, error) {
+func init() {
+	viper.AddConfigPath(configPath)
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("properties")
+	viper.SetDefault(timeoutKey, defaultTimeout)
+	viper.SetDefault(haltTimeKey, defaultHaltTime)
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Printf("error reading resource file: %v", err)
+		return
+	}
+	timeout = time.Duration(viper.GetInt64(timeoutKey)) * time.Millisecond
+	haltTime = time.Duration(viper.GetInt64(haltTimeKey)) * time.Millisecond
+}
+
+func DialNTSKE(host, serverName string, aeadID byte) (*datastruct.NTSPayload, error) {
 	config := new(tls.Config)
 	config.NextProtos = []string{alpnID}
 	if serverName != "" {
@@ -45,7 +67,7 @@ func DialNTSKE(host, serverName string, aeadID byte) (*payload.NTSPayload, error
 		}
 	}(conn)
 
-	res := &payload.NTSPayload{
+	res := &datastruct.NTSPayload{
 		Host:   host,
 		Port:   4460,
 		Secure: !config.InsecureSkipVerify,

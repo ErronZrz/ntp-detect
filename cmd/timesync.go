@@ -8,9 +8,9 @@ var (
 	nGoroutines   int
 	nPrintedHosts int
 	timeSyncCmd   = &cobra.Command{
-		Use:   "timesync",
+		Use:   "timesync <cidr> [OPTIONS]",
 		Short: "Send time synchronization requests and parse responses",
-		Long: "Use the 'ntpdtc timesync' command to send a time synchronization request to the" +
+		Long: "Use the 'ntpdtc timesync' command to send a time synchronization request to the " +
 			"specified CIDR address and listen for the response.",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := executeTimeSync(cmd, args)

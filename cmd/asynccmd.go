@@ -6,9 +6,9 @@ import (
 
 var (
 	asyncCmd = &cobra.Command{
-		Use:   "async",
+		Use:   "async <cidr> [OPTIONS]",
 		Short: "Asynchronously sends and receives time synchronization packets",
-		Long: "The 'async' command has the same effect as the 'timesync' command, but" +
+		Long: "The 'async' command has the same effect as the 'timesync' command, but " +
 			"sends and receives packets asynchronously.",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := executeAsync(cmd, args)

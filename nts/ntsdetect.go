@@ -1,8 +1,8 @@
 package nts
 
 import (
+	"active/datastruct"
 	"active/parser"
-	"active/payload"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -16,7 +16,7 @@ var (
 	}
 )
 
-func DetectNTSServer(host, serverName string) (*payload.NTSDetectPayload, error) {
+func DetectNTSServer(host, serverName string) (*datastruct.NTSDetectPayload, error) {
 	config := new(tls.Config)
 	config.NextProtos = []string{alpnID}
 	if serverName != "" {
@@ -32,12 +32,12 @@ func DetectNTSServer(host, serverName string) (*payload.NTSDetectPayload, error)
 		return nil, fmt.Errorf("cannot dial TLS server %s: %v", host, err)
 	}
 
-	info := payload.DetectInfo{
+	info := datastruct.DetectInfo{
 		AEADList:      make([]bool, 34),
 		ServerPortSet: make(map[string]struct{}),
 	}
 
-	res := &payload.NTSDetectPayload{
+	res := &datastruct.NTSDetectPayload{
 		Host:   host,
 		Port:   4460,
 		Secure: !config.InsecureSkipVerify,
@@ -54,12 +54,16 @@ func DetectNTSServer(host, serverName string) (*payload.NTSDetectPayload, error)
 		return nil, err
 	}
 
+	if info.AEADList[0x0F] {
+		fmt.Println("- (0F) AEAD_AES_SIV_CMAC_256:        supported")
+	}
+
 	for id := byte(0x01); id <= 0x21; id++ {
 		if id == 0x0F {
 			continue
 		}
 
-		<-time.After(500 * time.Millisecond)
+		<-time.After(haltTime)
 		conn, err = tls.DialWithDialer(dialer, "tcp", host+":4460", config)
 		if err != nil {
 			return nil, fmt.Errorf("cannot dial TLS server %s: %v", host, err)
@@ -69,12 +73,19 @@ func DetectNTSServer(host, serverName string) (*payload.NTSDetectPayload, error)
 		if err != nil {
 			return nil, err
 		}
+
+		name := datastruct.GetAEADName(id) + ":"
+		status := "x"
+		if info.AEADList[id] {
+			status = "supported"
+		}
+		fmt.Printf("- (%02X) %-27s   %s\n", id, name, status)
 	}
 
 	return res, nil
 }
 
-func singleReadWrite(aeadID byte, conn *tls.Conn, info payload.DetectInfo) error {
+func singleReadWrite(aeadID byte, conn *tls.Conn, info datastruct.DetectInfo) error {
 	defer func(conn *tls.Conn) {
 		err := conn.Close()
 		if err != nil {

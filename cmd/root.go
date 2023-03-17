@@ -18,6 +18,8 @@ var (
 func init() {
 	rootCmd.AddCommand(timeSyncCmd)
 	rootCmd.AddCommand(asyncCmd)
+	rootCmd.AddCommand(ntsCmd)
+	rootCmd.AddCommand(ntsAlgoCmd)
 }
 
 func Execute() {
