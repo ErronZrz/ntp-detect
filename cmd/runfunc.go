@@ -35,7 +35,7 @@ func executeTimeSync(cmd *cobra.Command, args []string) error {
 		ngStr = strconv.Itoa(nGoroutines)
 	}
 	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    address: %s\n    num of goroutines: %s\n"+
-		"    num of printed hosts: %d\n\n\n\n", cmdName, address, ngStr, nPrintedHosts)
+		"    num of printed hosts: %d\n\n", cmdName, address, ngStr, nPrintedHosts)
 
 	var dataCh <-chan *datastruct.RcvPayload
 	startTime := time.Now()
@@ -45,11 +45,12 @@ func executeTimeSync(cmd *cobra.Command, args []string) error {
 		dataCh = udpdetect.DialNetworkNTPWithBatchSize(address, nGoroutines)
 	}
 	if dataCh == nil {
-		_, _ = fmt.Fprint(os.Stderr, errors.New("dataCh is nil"))
+		return errors.New("dataCh is nil")
 	}
 	count := printResult(dataCh, "timesync_"+address)
 
-	fmt.Printf("%d hosts detected in %s\n", count, utils.DurationToStr(startTime, time.Now()))
+	_, _ = fmt.Fprintf(os.Stdout, "%d hosts detected in %s\n",
+		count, utils.DurationToStr(startTime, time.Now()))
 
 	return nil
 }
@@ -64,18 +65,19 @@ func executeAsync(cmd *cobra.Command, args []string) error {
 	}
 	address := args[0]
 	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    address: %s\n    "+
-		"num of printed hosts: %d\n\n\n\n", cmdName, address, nPrintedHosts)
+		"num of printed hosts: %d\n\n", cmdName, address, nPrintedHosts)
 
 	startTime := time.Now()
 	dataCh := async.DialNetworkNTP(address)
 
 	if dataCh == nil {
-		_, _ = fmt.Fprint(os.Stderr, errors.New("dataCh is nil"))
+		return errors.New("dataCh is nil")
 	}
 
 	count := printResult(dataCh, "async_"+address)
 
-	fmt.Printf("%d hosts detected in %s\n", count, utils.DurationToStr(startTime, time.Now()))
+	_, _ = fmt.Fprintf(os.Stdout, "%d hosts detected in %s\n",
+		count, utils.DurationToStr(startTime, time.Now()))
 
 	return nil
 }

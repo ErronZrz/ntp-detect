@@ -6,7 +6,7 @@ import (
 
 var (
 	asyncCmd = &cobra.Command{
-		Use:   "async <cidr> [OPTIONS]",
+		Use:   "async <cidr>",
 		Short: "Asynchronously sends and receives time synchronization packets",
 		Long: "The 'async' command has the same effect as the 'timesync' command, but " +
 			"sends and receives packets asynchronously.",

@@ -4,9 +4,11 @@ import (
 	"active/nts"
 	"active/output"
 	"active/parser"
+	"active/utils"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"time"
 )
 
 func executeNTS(cmd *cobra.Command, args []string) error {
@@ -24,7 +26,9 @@ func executeNTS(cmd *cobra.Command, args []string) error {
 		serverNameLine = fmt.Sprintf("    server name: %s\n", serverName)
 	}
 
-	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    host: %s%s\n\n\n\n", cmdName, host, serverNameLine)
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    host: %s\n%s\n", cmdName, host, serverNameLine)
+
+	startTime := time.Now()
 
 	payload, err := nts.DialNTSKE(host, serverName, 0x0F)
 	if err != nil {
@@ -44,6 +48,9 @@ func executeNTS(cmd *cobra.Command, args []string) error {
 	_, _ = fmt.Fprintf(os.Stdout, "%s[parsed]\n%s", raw, parsed)
 	output.WriteNTSToFile(raw, parsed, host)
 
+	_, _ = fmt.Fprintf(os.Stdout, "NTS-KE handshake and parsing were completed in %s\n",
+		utils.DurationToStr(startTime, time.Now()))
+
 	return nil
 }
 
@@ -62,7 +69,9 @@ func executeNTSAlgo(cmd *cobra.Command, args []string) error {
 		serverNameLine = fmt.Sprintf("    server name: %s\n", serverName)
 	}
 
-	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    host: %s%s\n\n\n\n", cmdName, host, serverNameLine)
+	_, _ = fmt.Fprintf(os.Stdout, "Ready to run `%s`.\n    host: %s\n%s\n", cmdName, host, serverNameLine)
+
+	startTime := time.Now()
 
 	payload, err := nts.DetectNTSServer(host, serverName)
 	if err != nil {
@@ -72,6 +81,9 @@ func executeNTSAlgo(cmd *cobra.Command, args []string) error {
 	content := payload.Lines()
 	_, _ = fmt.Fprint(os.Stdout, content)
 	output.WriteNTSDetectToFile(content, host)
+
+	_, _ = fmt.Fprintf(os.Stdout, "33 algorithms detected in %s\n",
+		utils.DurationToStr(startTime, time.Now()))
 
 	return nil
 }

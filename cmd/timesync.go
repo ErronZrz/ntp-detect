@@ -8,7 +8,7 @@ var (
 	nGoroutines   int
 	nPrintedHosts int
 	timeSyncCmd   = &cobra.Command{
-		Use:   "timesync <cidr> [OPTIONS]",
+		Use:   "timesync <cidr>",
 		Short: "Send time synchronization requests and parse responses",
 		Long: "Use the 'ntpdtc timesync' command to send a time synchronization request to the " +
 			"specified CIDR address and listen for the response.",
