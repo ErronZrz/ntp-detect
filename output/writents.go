@@ -28,7 +28,7 @@ func WriteNTSToFile(raw, parsed, host string) {
 	filePath := dirPath + now.Format(ntsFileTimeFormat) + host + ".txt"
 	dividingLine := now.Format(ntsDividingLineFormat)
 
-	commonWrite(filePath, []string{dividingLine, raw, beforeParsed, parsed})
+	commonWrite(filePath, []string{dividingLine, raw, beforeParsed, parsed, "\n\n"})
 }
 
 func WriteNTSDetectToFile(content, host string) {
@@ -37,5 +37,5 @@ func WriteNTSDetectToFile(content, host string) {
 	filePath := dirPath + now.Format(ntsFileTimeFormat) + host + "_detect.txt"
 	dividingLine := now.Format(ntsDividingLineFormat)
 
-	commonWrite(filePath, []string{dividingLine, content, "\n\n\n"})
+	commonWrite(filePath, []string{dividingLine, content, "\n\n"})
 }

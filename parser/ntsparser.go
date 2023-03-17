@@ -65,7 +65,7 @@ func ParseNTSResponse(data []byte) (*Response, error) {
 		}
 		buf.WriteByte('\n')
 	}
-	buf.Write([]byte{'\n', '\n', '\n'})
+	buf.WriteByte('\n')
 
 	return &Response{buf: buf}, nil
 }

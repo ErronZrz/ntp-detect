@@ -128,5 +128,8 @@ func (p *NTSDetectPayload) Lines() string {
 			buf.WriteString(fmt.Sprintf("    - %s\n", address))
 		}
 	}
+
+	buf.WriteByte('\n')
+
 	return buf.String()
 }
