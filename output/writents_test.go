@@ -10,7 +10,7 @@ import (
 func TestWriteNTSToFile(t *testing.T) {
 	host := "194.58.207.74"
 	serverName := "sth2.nts.netnod.se"
-	payload, err := nts.DialNTSKE(host, serverName, 0x0F)
+	payload, err := nts.DialNTSKE(host, serverName, 0x22)
 	if err != nil {
 		t.Error(err)
 		return

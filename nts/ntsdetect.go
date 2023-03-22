@@ -81,6 +81,7 @@ func DetectNTSServer(host, serverName string) (*datastruct.NTSDetectPayload, err
 		}
 		fmt.Printf("- (%02X) %-27s   %s\n", id, name, status)
 	}
+	fmt.Println()
 
 	return res, nil
 }

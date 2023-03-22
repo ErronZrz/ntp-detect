@@ -28,10 +28,10 @@ func init() {
 	}
 }
 
-func WriteToFile(raw, parsed, cmd string, seq int, rcvTime, now time.Time) {
+func WriteToFile(raw, parsed, info string, seq int, rcvTime, now time.Time) {
 	dirPath := viper.GetString(outputPathKey)
-	cmd = strings.Replace(cmd, "/", "_", 1)
-	filePath := dirPath + now.Format(fileTimeFormat) + cmd + ".txt"
+	info = strings.Replace(info, "/", "_", 1)
+	filePath := dirPath + now.Format(fileTimeFormat) + info + ".txt"
 
 	seqLine := "#" + strconv.Itoa(seq) + "\n"
 	dividingLine := rcvTime.Format(dividingLineFormat)

@@ -53,7 +53,7 @@ func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *datastruct.
 	}
 	dataCh := make(chan *datastruct.RcvPayload, chSize)
 	wg := &sync.WaitGroup{}
-	fmt.Printf("Num of addresses: %d\n", num)
+	// fmt.Printf("Num of addresses: %d\n", num)
 	wg.Add(num)
 	batchNum := num / batchSize
 	for i := 0; i < batchNum; i++ {

@@ -170,6 +170,10 @@ func printEOM(r *record, _ *bytes.Buffer) error {
 }
 
 func printNextProto(r *record, buf *bytes.Buffer) error {
+	if r.bodyLen == 0 {
+		buf.WriteString("None of given protocol supported")
+		return nil
+	}
 	if r.bodyLen != 2 {
 		return fmt.Errorf("unexpected body length in Next Protocol record: %d", r.bodyLen)
 	}
@@ -213,7 +217,7 @@ func printWarning(r *record, buf *bytes.Buffer) error {
 
 func printAEADAlgorithm(r *record, buf *bytes.Buffer) error {
 	if r.bodyLen == 0 {
-		buf.WriteString("No AEAD algorithm supported")
+		buf.WriteString("None of given AEAD algorithm supported")
 		return nil
 	}
 	if r.bodyLen != 2 {

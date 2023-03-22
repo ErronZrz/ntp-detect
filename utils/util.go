@@ -16,6 +16,8 @@ import (
 const (
 	configPath    = "../resource/"
 	dbPathKey     = "ip2region.db_path"
+	nullIP        = "0.0.0.0"
+	nullFlag      = "未同步"
 	unknownFlag   = "未知地区"
 	privateFlag   = "内网地址"
 	preciseFormat = "2006-01-02 15:04:05.000000 UTC"
@@ -78,6 +80,9 @@ func FormatScientific(f float64) string {
 }
 
 func RegionOf(ipStr string) string {
+	if ipStr == nullIP {
+		return nullFlag
+	}
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
 		return unknownFlag

@@ -27,15 +27,18 @@ func init() {
 		"ACTS": "NIST telephone modem",
 		"USNO": "USNO telephone modem",
 		"PTB":  "European telephone modem",
+		"PTP":  "Precise Time Protocol",
 	}
 }
 
 func completeSource(s []byte) string {
-	str := string(s)
-	if complete, ok := sourceMap[str]; ok {
-		return fmt.Sprintf("%s (%s)", str, complete)
+	var str string
+	if s[3] != 0x00 {
+		str = string(s)
+	} else {
+		str = string(s[:3])
 	}
-	if complete, ok := sourceMap[str[:3]]; ok {
+	if complete, ok := sourceMap[str]; ok {
 		return fmt.Sprintf("%s (%s)", str, complete)
 	}
 	return str
