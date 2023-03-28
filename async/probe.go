@@ -55,29 +55,29 @@ func init() {
 }
 
 func DialNetworkNTP(cidr string) <-chan *datastruct.RcvPayload {
-	errChan := make(chan error)
+	errCh := make(chan error)
 	doneCh = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
-	go func(ctx context.Context, errChan <-chan error) {
+	go func(ctx context.Context, errCh <-chan error) {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case err := <-errChan:
+			case err := <-errCh:
 				fmt.Println(err)
 			}
 		}
-	}(ctx, errChan)
+	}(ctx, errCh)
 
 	dataCh := make(chan *datastruct.RcvPayload, 1024)
 
 	var err error
 	sharedConn, err = net.ListenUDP("udp", localAddr)
 	if err != nil {
-		errChan <- err
+		errCh <- err
 	}
 
-	go writeNetWorkNTP(cidr, errChan)
+	go writeNetWorkNTP(cidr, errCh)
 	go readNetworkNTP(ctx, cidr, dataCh)
 
 	go func() {

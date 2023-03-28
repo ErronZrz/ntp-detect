@@ -3,8 +3,8 @@ package dns
 import "testing"
 
 const (
-	src = "D:/Desktop/Detect/domain/domain6.txt"
-	dst = "D:/Desktop/Detect/domain/domain6_ip.txt"
+	src = "D:/Desktop/Detect/domain/tls-list.txt"
+	dst = "D:/Desktop/Detect/domain/tls-list-ip.txt"
 )
 
 func TestOutputDNS(t *testing.T) {
@@ -23,6 +23,13 @@ func TestDetectAfterDNS(t *testing.T) {
 
 func TestAsyncDetectAfterDNS(t *testing.T) {
 	err := AsyncDetectAfterDNS(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestTLSAfterDNS(t *testing.T) {
+	err := TLSAfterDNS(src, dst)
 	if err != nil {
 		t.Error(err)
 	}

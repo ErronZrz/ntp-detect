@@ -3,6 +3,7 @@ package dns
 import (
 	"active/output"
 	"active/parser"
+	"active/tcp"
 	"active/udpdetect"
 	"bufio"
 	"errors"
@@ -51,6 +52,10 @@ func AsyncDetectAfterDNS(src, dst string) error {
 		return asyncDetect(domain, ip)
 	}
 	return commonDNS(src, dst, asyncDetectWork)
+}
+
+func TLSAfterDNS(src, dst string) error {
+	return commonDNS(src, dst, checkTLS)
 }
 
 func commonDNS(src, dst string, work extraWork) error {
@@ -160,6 +165,15 @@ func detect(domain, ip string) error {
 		seqNum++
 		output.WriteToFile(p.Lines(), header.Lines(), domain+"_"+cidr, seqNum, p.RcvTime, now)
 	}
+	return nil
+}
+
+func checkTLS(domain, ip string) error {
+	result := "x"
+	if tcp.IsTLSEnabled(ip, 4460, "") {
+		result = "Support"
+	}
+	fmt.Printf("%-30s%-20s%s\n", domain, ip, result)
 	return nil
 }
 

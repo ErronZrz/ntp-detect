@@ -121,7 +121,7 @@ func (p *NTSDetectPayload) Lines() string {
 	set := p.Info.ServerPortSet
 	buf.WriteString("NTPv4 server addresses:")
 	if len(set) == 0 {
-		buf.WriteString(" None\n")
+		buf.WriteString(" Default\n")
 	} else {
 		buf.WriteByte('\n')
 		for address := range set {

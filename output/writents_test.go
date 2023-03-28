@@ -8,8 +8,8 @@ import (
 )
 
 func TestWriteNTSToFile(t *testing.T) {
-	host := "194.58.207.74"
-	serverName := "sth2.nts.netnod.se"
+	host := "208.113.130.146"
+	serverName := ""
 	payload, err := nts.DialNTSKE(host, serverName, 0x22)
 	if err != nil {
 		t.Error(err)
@@ -30,8 +30,8 @@ func TestWriteNTSToFile(t *testing.T) {
 }
 
 func TestWriteNTSDetectToFile(t *testing.T) {
-	host := "194.58.207.74"
-	serverName := "sth2.nts.netnod.se"
+	host := "84.255.251.205"
+	serverName := ""
 	payload, err := nts.DetectNTSServer(host, serverName)
 	if err != nil {
 		t.Error(err)
