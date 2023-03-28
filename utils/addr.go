@@ -1,4 +1,4 @@
-package addr
+package utils
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ var (
 	}
 )
 
-func cidrPow(cidr string) (int, error) {
+func CidrPow(cidr string) (int, error) {
 	n := len(cidr)
 	pow := 32
 	val := cidr[n-1]
@@ -39,21 +39,21 @@ func cidrPow(cidr string) (int, error) {
 	return pow, nil
 }
 
-func smallestPrime(pow int) (int, error) {
+func SmallestPrime(pow int) (int, error) {
 	if pow < 0 || pow > 32 {
 		return -1, errors.New("unsupported number")
 	}
 	return (1 << pow) + toAdd[pow], nil
 }
 
-func getSeed(pow int) (int, error) {
+func GetSeed(pow int) (int, error) {
 	if pow < 0 || pow > 32 {
 		return -1, errors.New("unsupported number")
 	}
 	return seeds[pow], nil
 }
 
-func findSeed(root int) int {
+func FindSeed(root int) int {
 	if root <= 3 {
 		return root - 1
 	}

@@ -1,6 +1,7 @@
 package addr
 
 import (
+	"active/utils"
 	"fmt"
 	"net"
 )
@@ -15,7 +16,7 @@ type ModuloGenerator struct {
 }
 
 func NewModuloGenerator(cidr string) (*ModuloGenerator, error) {
-	pow, err := cidrPow(cidr)
+	pow, err := utils.CidrPow(cidr)
 	if err != nil {
 		return nil, err
 	}
@@ -23,11 +24,11 @@ func NewModuloGenerator(cidr string) (*ModuloGenerator, error) {
 	if err != nil {
 		return nil, err
 	}
-	root, err := smallestPrime(pow)
+	root, err := utils.SmallestPrime(pow)
 	if err != nil {
 		return nil, err
 	}
-	seed, err := getSeed(pow)
+	seed, err := utils.GetSeed(pow)
 	if err != nil {
 		return nil, err
 	}

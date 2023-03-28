@@ -1,6 +1,7 @@
 package addr
 
 import (
+	"active/utils"
 	"net"
 )
 
@@ -12,7 +13,7 @@ type SimpleGenerator struct {
 }
 
 func NewAddrGenerator(cidr string) (*SimpleGenerator, error) {
-	pow, err := cidrPow(cidr)
+	pow, err := utils.CidrPow(cidr)
 	if err != nil {
 		return nil, err
 	}

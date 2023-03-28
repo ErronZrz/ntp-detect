@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *datastruct.RcvPayload) {
+func readNetworkNTP(ctx context.Context, cidr string, conn *net.UDPConn, doneCh chan<- struct{}) {
 	defer func() {
 		doneCh <- struct{}{}
 	}()
@@ -29,12 +29,12 @@ func readNetworkNTP(ctx context.Context, cidr string, dataCh chan<- *datastruct.
 			// fmt.Println("Done!")
 			return
 		default:
-			err := sharedConn.SetReadDeadline(time.Now().Add(checkInterval))
+			err := conn.SetReadDeadline(time.Now().Add(checkInterval))
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			n, udpAddr, err := sharedConn.ReadFromUDP(buf)
+			n, udpAddr, err := conn.ReadFromUDP(buf)
 			if err != nil {
 				continue
 			}

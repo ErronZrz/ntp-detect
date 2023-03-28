@@ -38,8 +38,8 @@ func TestWriteToFile(t *testing.T) {
 }
 
 func TestAsyncWriteToFile(t *testing.T) {
-	cidr := "203.107.6.0/24"
-	dataCh := async.DialNetworkNTP(cidr)
+	cidr := "203.107.6.0/20"
+	dataCh := async.DialNetworkNTP(cidr, 16)
 	if dataCh == nil {
 		t.Error("dataCh is nil")
 		return

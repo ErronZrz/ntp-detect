@@ -186,3 +186,37 @@ func PrintBytes(data []byte, rowLen int) string {
 	}
 	return buf.String()
 }
+
+func SplitCIDR(cidr string, parts int) []string {
+	pow, err := CidrPow(cidr)
+	if err != nil {
+		fmt.Printf("parse CIDR error: %v", err)
+	}
+
+	num := 1
+	for num > 0 && num < parts {
+		num <<= 1
+		pow--
+	}
+	if num != parts {
+		fmt.Printf("bad parameter: %d", parts)
+	}
+
+	ip, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		fmt.Printf("parse CIDR error: %v", err)
+	}
+	b := ip.Mask(ipNet.Mask)
+	basic := uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+
+	res := make([]string, parts)
+	addrNum := 1 << pow
+
+	for i := 0; i < parts; i++ {
+		v := basic + uint32(addrNum*i)
+		next := fmt.Sprintf("%d.%d.%d.%d/%d", byte(v>>24), byte(v>>16), byte(v>>8), byte(v), 32-pow)
+		res[i] = next
+	}
+
+	return res
+}

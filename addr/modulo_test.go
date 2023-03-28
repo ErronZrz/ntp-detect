@@ -22,14 +22,6 @@ func TestModuloGenerator(t *testing.T) {
 	}
 }
 
-func TestFindSeed(t *testing.T) {
-	for i := 0; i <= 32; i++ {
-		n, _ := smallestPrime(i)
-		m := findSeed(n)
-		fmt.Printf("i=%d, total=%d, n=%d, m=%d\n", i, 1<<i, n, m)
-	}
-}
-
 func randomCIDR(pow int) string {
 	a, b, c, d := rand.Intn(256), rand.Intn(256), rand.Intn(256), rand.Intn(256)
 	return fmt.Sprintf("%d.%d.%d.%d/%d", a, b, c, d, pow)

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -39,5 +40,12 @@ func TestVariableData(t *testing.T) {
 	got := FormatTimestamp(data[40:])[:len(timeFormat)]
 	if got != want {
 		t.Errorf("VariableData timestamp: " + got)
+	}
+}
+
+func TestSplitCIDR(t *testing.T) {
+	got := SplitCIDR("192.168.254.147/22", 32)
+	for _, s := range got {
+		fmt.Println(s)
 	}
 }
