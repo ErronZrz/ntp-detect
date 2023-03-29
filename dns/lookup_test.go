@@ -3,8 +3,8 @@ package dns
 import "testing"
 
 const (
-	src = "D:/Desktop/Detect/domain/tls-list.txt"
-	dst = "D:/Desktop/Detect/domain/tls-list-ip.txt"
+	src = "D:/Desktop/TMP/毕设/NTP/第六阶段/official-server/domain-two-backup1.txt"
+	dst = "D:/Desktop/TMP/毕设/NTP/第六阶段/official-server/ip-two-hk-backup1.txt"
 )
 
 func TestOutputDNS(t *testing.T) {
