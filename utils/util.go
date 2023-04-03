@@ -113,6 +113,30 @@ func RegionOf(ipStr string) string {
 	return res + strings.ReplaceAll(parts[3], "市", "")
 }
 
+func CountryOf(ipStr string) string {
+	if ipStr == nullIP {
+		return nullFlag
+	}
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return unknownFlag
+	}
+	if ip.IsPrivate() {
+		return privateFlag
+	}
+	region, err := searcher.SearchByStr(ipStr)
+	if err != nil {
+		fmt.Println(err)
+		return unknownFlag
+	}
+	parts := strings.Split(region, "|")
+	country := parts[0]
+	if country == "0" {
+		return unknownFlag
+	}
+	return country
+}
+
 func CalculateDelay(timestamp []byte, another time.Time) time.Duration {
 	t := binary.BigEndian.Uint64(timestamp)
 	seconds := int64(t >> 32)

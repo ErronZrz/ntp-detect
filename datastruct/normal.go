@@ -50,7 +50,7 @@ func (p *RcvPayload) Lines() string {
 
 func durationToStr(d time.Duration) string {
 	negative := d < 0
-	us := d.Nanoseconds() / 1000
+	us := d.Microseconds()
 	str := strconv.FormatInt(us, 10)
 	n := len(str)
 	if n <= 3 || (negative && n <= 4) {

@@ -16,7 +16,7 @@ type Header struct {
 	Poll              string
 	Precision         string
 	RootDelay         string
-	RootDesp          string
+	RootDisp          string
 	RefID             string
 	RefTimestamp      string
 	OriginTimestamp   string
@@ -49,7 +49,7 @@ const (
 var (
 	parseChain = []stepFunc{
 		parseLeapIndicator, parseVersion, parseMode, parseStratum, parsePoll,
-		parsePrecision, parseRootDelay, parseRootDesp, parseRefID, parseRefTimestamp,
+		parsePrecision, parseRootDelay, parseRootDisp, parseRefID, parseRefTimestamp,
 		parseOriginTimestamp, parseReceiveTimestamp, parseTransmitTimestamp,
 	}
 )
@@ -78,9 +78,9 @@ func (h *Header) Print() {
 
 func (h *Header) Lines() string {
 	return fmt.Sprintf("Leap:    %s\nVersion: %s\nMode:    %s\nStratum: %s\nPoll:    %s\nPrecision:       %s\nRoot "+
-		"Delay:      %s\nRoot Despersion: %s\nReference ID:    %s\nReference Timestamp: %s\nOrigin Timestamp:    %s\n"+
+		"Delay:      %s\nRoot Dispersion: %s\nReference ID:    %s\nReference Timestamp: %s\nOrigin Timestamp:    %s\n"+
 		"Receive Timestamp:   %s\nTransmit Timestamp:  %s\n\n\n\n", h.Leap, h.Version, h.Mode, h.Stratum, h.Poll, h.Precision,
-		h.RootDelay, h.RootDesp, h.RefID, h.RefTimestamp, h.OriginTimestamp, h.ReceiveTimestamp, h.TransmitTimestamp)
+		h.RootDelay, h.RootDisp, h.RefID, h.RefTimestamp, h.OriginTimestamp, h.ReceiveTimestamp, h.TransmitTimestamp)
 }
 
 func parseLeapIndicator(data []byte, h *Header) error {
@@ -164,10 +164,10 @@ func parseRootDelay(data []byte, h *Header) error {
 	return nil
 }
 
-func parseRootDesp(data []byte, h *Header) error {
+func parseRootDisp(data []byte, h *Header) error {
 	val := binary.BigEndian.Uint32(data[8:12])
 	floatVal := float64(val) / (1 << 16)
-	h.RootDesp = utils.FormatScientific(floatVal) + " sec"
+	h.RootDisp = utils.FormatScientific(floatVal) + " sec"
 	return nil
 }
 

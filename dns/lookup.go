@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"active/datastruct"
 	"active/nts"
 	"active/output"
 	"active/parser"
@@ -39,7 +40,7 @@ func DetectAfterDNS(src, dst string) error {
 			return nil
 		}
 		visited[netAddr] = struct{}{}
-		return detect(domain, ip)
+		return detect(domain, ip, nil)
 	}
 	return commonDNS(src, dst, detectWork)
 }
@@ -59,9 +60,36 @@ func AsyncDetectAfterDNS(src, dst string) error {
 		visited[netAddr] = struct{}{}
 		mu.Unlock()
 
-		return asyncDetect(domain, ip)
+		return asyncDetect(domain, ip, nil)
 	}
 	return commonDNS(src, dst, asyncDetectWork)
+}
+
+func DetectStatisticAfterNTS(src, ipDst, staDst string) error {
+	visited := make(map[string]struct{})
+	file, err := os.Create(staDst)
+	if err != nil {
+		return fmt.Errorf("error creating dstFile %s: %v", staDst, err)
+	}
+	defer closeFunc(file, staDst)
+	writer := bufio.NewWriter(file)
+	defer func(writer *bufio.Writer) {
+		err := writer.Flush()
+		if err != nil {
+			fmt.Printf("error flushing writer: %v", err)
+		}
+	}(writer)
+
+	detectWork := func(domain, ip string) error {
+		netAddr := net24(ip)
+		if _, ok := visited[netAddr]; ok {
+			return nil
+		}
+		visited[netAddr] = struct{}{}
+		return detect(domain, ip, writer)
+	}
+
+	return commonDNS(src, ipDst, detectWork)
 }
 
 func TLSAfterDNS(src, dst string) error {
@@ -165,9 +193,9 @@ func commonDNS(src, dst string, work extraWork) error {
 	return nil
 }
 
-func asyncDetect(domain, ip string) error {
+func asyncDetect(domain, ip string, writer *bufio.Writer) error {
 	go func() {
-		err := detect(domain, ip)
+		err := detect(domain, ip, writer)
 		if err != nil {
 			fmt.Printf("error during detection: %v", err)
 		}
@@ -175,7 +203,7 @@ func asyncDetect(domain, ip string) error {
 	return nil
 }
 
-func detect(domain, ip string) error {
+func detect(domain, ip string, writer *bufio.Writer) error {
 	cidr := ip + "/24"
 	dataCh := udpdetect.DialNetworkNTP(cidr)
 	if dataCh == nil {
@@ -194,6 +222,14 @@ func detect(domain, ip string) error {
 			return err
 		}
 		seqNum++
+		if writer != nil {
+			s := datastruct.NewStatistic(p)
+			s.Domain = domain
+			err = s.WriteToCSV(writer)
+			if err != nil {
+				return err
+			}
+		}
 		output.WriteToFile(p.Lines(), header.Lines(), domain+"_"+cidr, seqNum, p.RcvTime, now)
 	}
 	numDetected += seqNum
