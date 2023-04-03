@@ -65,7 +65,7 @@ func DialNTSKE(host, serverName string, aeadID byte) (*datastruct.NTSPayload, er
 	defer func(conn *tls.Conn) {
 		err := conn.Close()
 		if err != nil {
-			fmt.Printf("error closing TLS connect: %v", err)
+			fmt.Printf("error closing TLS connection %v", err)
 		}
 	}(conn)
 

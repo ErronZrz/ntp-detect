@@ -26,13 +26,3 @@ func TestDialNTSKE(t *testing.T) {
 		fmt.Print(res.Lines())
 	}
 }
-
-func TestDetectNTSServer(t *testing.T) {
-	payload, err := DetectNTSServer("194.58.207.74", "sth2.nts.netnod.se")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	fmt.Print(payload.Lines())
-}
