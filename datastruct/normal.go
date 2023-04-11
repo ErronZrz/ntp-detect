@@ -29,12 +29,7 @@ func (p *RcvPayload) Print() {
 func (p *RcvPayload) Lines() string {
 	s := fmt.Sprintf("%d bytes received from %s:%d (%s):\n", p.Len, p.Host, p.Port, utils.RegionOf(p.Host))
 	buf := bytes.NewBufferString(s)
-	for i := 0; i < 3; i++ {
-		for _, b := range p.RcvData[i<<4 : (i+1)<<4] {
-			buf.WriteString(fmt.Sprintf("%02X ", b))
-		}
-		buf.WriteByte('\n')
-	}
+	buf.WriteString(utils.PrintBytes(p.RcvData, 16))
 	// T2 - T1
 	sendDelay := utils.CalculateDelay(p.RcvData[32:40], p.SendTime)
 	// T4 - T3

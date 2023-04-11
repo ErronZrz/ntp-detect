@@ -49,3 +49,9 @@ func TestSplitCIDR(t *testing.T) {
 		fmt.Println(s)
 	}
 }
+
+func TestTranslateCountry(t *testing.T) {
+	countries := []string{"中国", "德国", "美国", "加拿大"}
+	result := TranslateCountry(countries)
+	fmt.Println(result)
+}

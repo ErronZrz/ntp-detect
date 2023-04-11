@@ -3,11 +3,14 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
 	"github.com/spf13/viper"
+	"io"
 	"math"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -35,9 +38,10 @@ func init() {
 		0xDB, 0x00, 0x04, 0xFA, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+		// 0x01, 0x02, 0x00, 0x04,
 	}
 	variableData = []byte{
-		0xDB, 0x00, 0x04, 0xFA, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0xE3, 0x00, 0x04, 0xFA, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
 	}
@@ -243,4 +247,67 @@ func SplitCIDR(cidr string, parts int) []string {
 	}
 
 	return res
+}
+
+func TranslateCountry(countries []string) []string {
+	type transReq struct {
+		Tp  string   `json:"trans_type"`
+		Src []string `json:"source"`
+		Id  string   `json:"request_id"`
+		D   bool     `json:"detect"`
+	}
+	type transRes struct {
+		Target []string `json:"target"`
+	}
+
+	client := &http.Client{}
+	tr := transReq{
+		Tp:  "zh2en",
+		Src: countries,
+		Id:  "erron",
+		D:   true,
+	}
+	data, err := json.Marshal(tr)
+	// fmt.Println(string(data))
+	if err != nil {
+		fmt.Printf("marshal error: %v", err)
+		return nil
+	}
+
+	url := "https://api.interpreter.caiyunai.com/v1/translator"
+	req, err := http.NewRequest("POST", url, bytes.NewReader(data))
+	if err != nil {
+		fmt.Printf("request error: %v", err)
+		return nil
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("X-Authorization", "token wa9ibv5xpgax8d4ds5gk")
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("request error: %v", err)
+		return nil
+	}
+	defer func() { _ = res.Body.Close() }()
+	if res.StatusCode != http.StatusOK {
+		fmt.Printf("status code error: %s", res.Status)
+		return nil
+	}
+
+	text, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("read body error: %v", err)
+		return nil
+	}
+
+	var trRes transRes
+	err = json.Unmarshal(text, &trRes)
+	if err != nil {
+		fmt.Printf("unmarshal error: %v", err)
+		return nil
+	}
+
+	return trRes.Target
 }

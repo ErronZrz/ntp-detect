@@ -11,7 +11,7 @@ import (
 )
 
 func TestWriteToFile(t *testing.T) {
-	cidr := "203.107.6.0/24"
+	cidr := "185.209.85.0/24"
 	dataCh := udpdetect.DialNetworkNTP(cidr)
 	if dataCh == nil {
 		t.Error("dataCh is nil")

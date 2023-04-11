@@ -3,9 +3,9 @@ package dns
 import "testing"
 
 const (
-	src    = "D:/Desktop/Detect/domain/domain20.txt"
-	ipDst  = "D:/Desktop/Detect/domain/domain20_ip.txt"
-	staDst = "D:/Desktop/Detect/domain/domain20_sta.csv"
+	src    = "D:/Desktop/Detect/domain/domain28.txt"
+	ipDst  = "D:/Desktop/Detect/domain/domain28_ip.txt"
+	staDst = "D:/Desktop/Detect/domain/domain28_sta.csv"
 )
 
 func TestOutputDNS(t *testing.T) {

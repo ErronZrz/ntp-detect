@@ -8,17 +8,18 @@ import (
 )
 
 type Statistic struct {
-	Domain     string
-	IP         string
-	Country    string
-	Stratum    int
-	Poll       int
-	Precision  int
-	Delay      int
-	Offset     int
-	RefCountry string
-	RootDelay  int
-	RootDisp   int
+	Domain         string
+	IP             string
+	Country        string
+	Stratum        int
+	Poll           int
+	Precision      int
+	Delay          int
+	Offset         int
+	ProcessingTime int
+	RefCountry     string
+	RootDelay      int
+	RootDisp       int
 }
 
 func NewStatistic(p *RcvPayload) *Statistic {
@@ -42,6 +43,7 @@ func NewStatistic(p *RcvPayload) *Statistic {
 	offset := (sendDelay - rcvDelay) / 2
 	res.Delay = int(avgDelay.Microseconds())
 	res.Offset = int(offset.Microseconds())
+	res.ProcessingTime = int(binary.BigEndian.Uint64(data[40:48]) - binary.BigEndian.Uint64(data[32:40]))
 
 	if stratum == 1 {
 		if data[15] == 0x00 {
@@ -58,9 +60,9 @@ func NewStatistic(p *RcvPayload) *Statistic {
 }
 
 func (s *Statistic) WriteToCSV(writer *bufio.Writer) error {
-	_, err := writer.WriteString(fmt.Sprintf("%s,%s,%s,%d,%d,%d,%d,%d,%s,%d,%d\n",
+	_, err := writer.WriteString(fmt.Sprintf("%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%d,%d\n",
 		s.Domain, s.IP, s.Country, s.Stratum, s.Poll, s.Precision, s.Delay, s.Offset,
-		s.RefCountry, s.RootDelay, s.RootDisp))
+		s.ProcessingTime, s.RefCountry, s.RootDelay, s.RootDisp))
 	if err != nil {
 		return fmt.Errorf("error writing statistic to CSV: %v", err)
 	}
