@@ -16,8 +16,8 @@ func HistogramChart(srcPath, dstDir, prefix string, params histParams) error {
 		return err
 	}
 
-	for _, histData := range histMap {
-		err := generateHistogramChart(histData, dstDir, prefix)
+	for name, data := range histMap {
+		err := generateHistogramChart(data, name, dstDir, prefix)
 		if err != nil {
 			return err
 		}
@@ -26,12 +26,12 @@ func HistogramChart(srcPath, dstDir, prefix string, params histParams) error {
 	return nil
 }
 
-func generateHistogramChart(data histData, dstDir, prefix string) error {
+func generateHistogramChart(data []float64, name string, dstDir, prefix string) error {
 	p := plot.New()
-	p.Title.Text = sharedParams.subject + data.name
+	p.Title.Text = sharedParams.subject + name
 	p.X.Label.Text = sharedParams.xText
 
-	hist, err := plotter.NewHist(plotter.Values(data.values), 20)
+	hist, err := plotter.NewHist(plotter.Values(data), 20)
 	if err != nil {
 		return fmt.Errorf("create histogram error: %v", err)
 	}

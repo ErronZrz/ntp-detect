@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	colNames = []string{
+	stratumNames = []string{
 		"Unsync",
 		"1", "2", "3", "4", "5", "6", "7", "8",
 		"9", "10", "11", "12", "13", "14", "15",
@@ -63,6 +63,7 @@ func generateCtr4SttMap(srcPath string) (map[string][]int, error) {
 
 	countryMap := make(map[string][]int)
 	all := make([]int, stratumLimit)
+
 	reader := csv.NewReader(file)
 	for {
 		row, err := reader.Read()
@@ -80,6 +81,7 @@ func generateCtr4SttMap(srcPath string) (map[string][]int, error) {
 			stratum = 0
 		}
 		all[stratum]++
+
 		bins, ok := countryMap[row[2]]
 		if !ok {
 			bins = make([]int, stratumLimit)
@@ -129,7 +131,7 @@ func generateStt4CtrBarChart(country, eng string, list []int, dstDir, prefix str
 	bars.ShowValue = true
 
 	p.Add(bars)
-	p.NominalX(colNames[i:j]...)
+	p.NominalX(stratumNames[i:j]...)
 
 	chartWidth := (1 + vg.Length(colNum)*0.3) * vg.Inch
 	chartHeight := 4 * vg.Inch
@@ -152,14 +154,21 @@ func stretchMax(x float64, horizontal bool) float64 {
 
 func getMarks(x float64) []plot.Tick {
 	var marks []plot.Tick
+	var nums = []float64{1, 2, 5}
+	var i int
 	var base float64 = 1
 	if x > 5 {
-		base = 5
-		for x >= base*10 {
-			base *= 2
+		i = 1
+		for x >= nums[i%3]*base*10 {
+			i++
+			if i%3 == 0 {
+				base *= 10
+			}
 		}
 	}
-	for i := 0; i <= int(x); i += int(base) {
+	interval := int(nums[i%3] * base)
+
+	for i := 0; i <= int(x); i += interval {
 		marks = append(marks, plot.Tick{Value: float64(i), Label: strconv.Itoa(i)})
 	}
 	return marks

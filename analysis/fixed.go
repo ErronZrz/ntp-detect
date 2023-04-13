@@ -41,8 +41,9 @@ func StratumPrecisionBarChart(srcPath, dstDir, prefix string) error {
 }
 
 func generateStratumPrecisionSlice(srcPath string) ([][]int64, error) {
-	res := make([][]int64, stratumLimit+1)
+	res := make([][]int64, stratumLimit+2)
 	all := make([]int64, 0)
+	syn := make([]int64, 0)
 
 	file, err := os.Open(srcPath)
 	if err != nil {
@@ -78,6 +79,11 @@ func generateStratumPrecisionSlice(srcPath string) ([][]int64, error) {
 			return nil, fmt.Errorf("parse precision error: %v", err)
 		}
 		all = append(all, precision)
+
+		if stratum > 0 {
+			syn = append(syn, precision)
+		}
+
 		if precision < minPrecision {
 			minPrecision = precision
 		}
@@ -91,6 +97,7 @@ func generateStratumPrecisionSlice(srcPath string) ([][]int64, error) {
 	}
 
 	res[stratumLimit] = all
+	res[stratumLimit+1] = syn
 
 	return res, nil
 }

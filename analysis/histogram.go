@@ -23,13 +23,9 @@ type histParams struct {
 	partitions []int
 }
 
-type histData struct {
-	name   string
-	values []float64
-}
-
 const (
 	allName = "All"
+	synName = "Synchronized"
 )
 
 var (
@@ -44,8 +40,8 @@ func HistogramBarChart(srcPath, dstDir, prefix string, params histParams) error 
 		return err
 	}
 
-	for _, histData := range histMap {
-		err := generateHistogramBarChart(histData, dstDir, prefix)
+	for name, data := range histMap {
+		err := generateHistogramBarChart(data, name, dstDir, prefix)
 		if err != nil {
 			return err
 		}
@@ -54,7 +50,7 @@ func HistogramBarChart(srcPath, dstDir, prefix string, params histParams) error 
 	return nil
 }
 
-func generateHistMap(srcPath string) (map[string]histData, error) {
+func generateHistMap(srcPath string) (map[string][]float64, error) {
 	file, err := os.Open(srcPath)
 	if err != nil {
 		return nil, fmt.Errorf("open file %s error: %v", srcPath, err)
@@ -66,8 +62,9 @@ func generateHistMap(srcPath string) (map[string]histData, error) {
 		}
 	}(file)
 
-	res := make(map[string]histData)
-	allHd := histData{name: allName}
+	res := make(map[string][]float64)
+	all := make([]float64, 0)
+	syn := make([]float64, 0)
 	reader := csv.NewReader(file)
 	for {
 		row, err := reader.Read()
@@ -81,32 +78,39 @@ func generateHistMap(srcPath string) (map[string]histData, error) {
 		if err != nil {
 			return nil, fmt.Errorf("parse int error: %v", err)
 		}
-		name := row[sharedParams.nameCol]
-		data, ok := res[name]
-		if !ok {
-			data = histData{name: sharedParams.subject + name}
-		}
 		realVal := float64(val) / sharedParams.divisor
-		data.values = append(data.values, realVal)
-		allHd.values = append(allHd.values, realVal)
-		res[name] = data
+		all = append(all, realVal)
+
+		name := row[sharedParams.nameCol]
+		if name != "0" {
+			syn = append(syn, realVal)
+		}
+
+		res[name] = append(res[name], realVal)
 	}
-	res[allName] = allHd
+	res[allName] = all
+	res[synName] = syn
 
 	return res, nil
 }
 
-func generateHistogramBarChart(data histData, dstDir, prefix string) error {
+func generateHistogramBarChart(data []float64, name, dstDir, prefix string) error {
+	if name != allName && name != synName {
+		name = sharedParams.subject + " " + name
+	}
+	if name == "Stratum 0" {
+		name = getStratumStr(0)
+	}
 	ps := sharedParams.partitions
 	n := len(ps)
 
 	values := make(plotter.Values, n+1)
 	labels := make([]string, n+1)
 
-	sort.Float64s(data.values)
+	sort.Float64s(data)
 	idx := 0
 	var max float64 = 0
-	for _, val := range data.values {
+	for _, val := range data {
 		for idx < n && val >= float64(ps[idx]) {
 			idx++
 		}
@@ -122,7 +126,7 @@ func generateHistogramBarChart(data histData, dstDir, prefix string) error {
 	labels[n] = fmt.Sprintf(">=%d", ps[n-1])
 
 	p := plot.New()
-	p.Title.Text = fmt.Sprintf("Distribution of %s for %s", sharedParams.xText, data.name)
+	p.Title.Text = fmt.Sprintf("Distribution of %s for %s", sharedParams.xText, name)
 	p.X.Label.Text = fmt.Sprintf("%s (%s)", sharedParams.xText, sharedParams.unit)
 	p.Y.Label.Text = "Count"
 	p.Y.Max = stretchMax(max, false)
@@ -142,7 +146,7 @@ func generateHistogramBarChart(data histData, dstDir, prefix string) error {
 	chartWidth := (1 + vg.Length(n+1)*0.4) * vg.Inch
 	chartHeight := 4 * vg.Inch
 
-	err = p.Save(chartWidth, chartHeight, fmt.Sprintf("%s/%s%s.png", dstDir, prefix, data.name))
+	err = p.Save(chartWidth, chartHeight, fmt.Sprintf("%s/%s%s.png", dstDir, prefix, name))
 	if err != nil {
 		return fmt.Errorf("save bar chart error: %v", err)
 	}

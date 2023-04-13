@@ -72,8 +72,9 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 		}
 	}(file)
 
-	res := make([][]countryNum, stratumLimit+1)
+	res := make([][]countryNum, stratumLimit+2)
 	all := make([]countryNum, 0)
+	syn := make([]countryNum, 0)
 
 	indexMap := make(map[string]int)
 	reader := csv.NewReader(file)
@@ -108,7 +109,7 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 			res[stratum] = now
 		}
 
-		if country[0] < 0x80 {
+		if useRef && country[0] < 0x80 {
 			country = specificSource
 		}
 		id = "*" + country
@@ -119,8 +120,20 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 			indexMap[id] = len(all)
 			all = append(all, countryNum{country: country, num: 1})
 		}
+
+		if stratum > 0 {
+			id = "*" + id
+			index, ok = indexMap[id]
+			if ok {
+				syn[index].num++
+			} else {
+				indexMap[id] = len(syn)
+				syn = append(syn, countryNum{country: country, num: 1})
+			}
+		}
 	}
 	res[stratumLimit] = all
+	res[stratumLimit+1] = syn
 
 	return res, nil
 }
@@ -177,9 +190,11 @@ func generateCtr4SttBarChart(cnList []countryNum, stratum, dstDir, prefix string
 
 func getStratumStr(stratum int) string {
 	if stratum == 0 {
-		return colNames[0]
+		return stratumNames[0]
 	} else if stratum == stratumLimit {
-		return "All"
+		return allName
+	} else if stratum == stratumLimit+1 {
+		return synName
 	}
-	return "Stratum " + colNames[stratum]
+	return "Stratum " + stratumNames[stratum]
 }
