@@ -16,8 +16,9 @@ import (
 type histParams struct {
 	nameCol    int
 	valCol     int
-	title      string
+	subject    string
 	xText      string
+	unit       string
 	divisor    float64
 	partitions []int
 }
@@ -26,6 +27,10 @@ type histData struct {
 	name   string
 	values []float64
 }
+
+const (
+	allName = "All"
+)
 
 var (
 	sharedParams histParams
@@ -62,6 +67,7 @@ func generateHistMap(srcPath string) (map[string]histData, error) {
 	}(file)
 
 	res := make(map[string]histData)
+	allHd := histData{name: allName}
 	reader := csv.NewReader(file)
 	for {
 		row, err := reader.Read()
@@ -78,11 +84,15 @@ func generateHistMap(srcPath string) (map[string]histData, error) {
 		name := row[sharedParams.nameCol]
 		data, ok := res[name]
 		if !ok {
-			data = histData{name: name}
+			data = histData{name: sharedParams.subject + name}
 		}
-		data.values = append(data.values, float64(val)/sharedParams.divisor)
+		realVal := float64(val) / sharedParams.divisor
+		data.values = append(data.values, realVal)
+		allHd.values = append(allHd.values, realVal)
 		res[name] = data
 	}
+	res[allName] = allHd
+
 	return res, nil
 }
 
@@ -95,11 +105,15 @@ func generateHistogramBarChart(data histData, dstDir, prefix string) error {
 
 	sort.Float64s(data.values)
 	idx := 0
+	var max float64 = 0
 	for _, val := range data.values {
 		for idx < n && val >= float64(ps[idx]) {
 			idx++
 		}
 		values[idx]++
+		if values[idx] > max {
+			max = values[idx]
+		}
 	}
 
 	for i, p := range ps {
@@ -108,8 +122,11 @@ func generateHistogramBarChart(data histData, dstDir, prefix string) error {
 	labels[n] = fmt.Sprintf(">=%d", ps[n-1])
 
 	p := plot.New()
-	p.Title.Text = sharedParams.title + data.name
-	p.X.Label.Text = sharedParams.xText
+	p.Title.Text = fmt.Sprintf("Distribution of %s for %s", sharedParams.xText, data.name)
+	p.X.Label.Text = fmt.Sprintf("%s (%s)", sharedParams.xText, sharedParams.unit)
+	p.Y.Label.Text = "Count"
+	p.Y.Max = stretchMax(max, false)
+	p.Y.Tick.Marker = plot.ConstantTicks(getMarks(p.Y.Max))
 
 	bars, err := plotter.NewBarChart(values, vg.Points(20))
 	if err != nil {
@@ -125,7 +142,7 @@ func generateHistogramBarChart(data histData, dstDir, prefix string) error {
 	chartWidth := (1 + vg.Length(n+1)*0.4) * vg.Inch
 	chartHeight := 4 * vg.Inch
 
-	err = p.Save(chartWidth, chartHeight, fmt.Sprintf("%s/%s%s.png", dstDir, prefix, p.Title.Text))
+	err = p.Save(chartWidth, chartHeight, fmt.Sprintf("%s/%s%s.png", dstDir, prefix, data.name))
 	if err != nil {
 		return fmt.Errorf("save bar chart error: %v", err)
 	}

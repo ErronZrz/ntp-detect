@@ -9,9 +9,9 @@ func TestHistogramChart(t *testing.T) {
 	params := histParams{
 		nameCol: 3,
 		valCol:  8,
-		title:   "Stratum ",
+		subject: "Stratum ",
 		xText:   "Processing Time (ms)",
-		divisor: (2 << 16) / 1000,
+		divisor: float64(2<<16) / 1000,
 	}
 	err := HistogramChart(srcPath, dstDir, prefix, params)
 	if err != nil {

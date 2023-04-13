@@ -9,7 +9,6 @@ import (
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 	"io"
-	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -21,6 +20,10 @@ type countryNum struct {
 	num     int
 }
 
+const (
+	specificSource = "特定时钟源"
+)
+
 func Country4StratumBarChart(srcPath, dstDir, prefix string, useRef bool) error {
 	cnListList, err := generateCtr4SttSlice(srcPath, useRef)
 	if err != nil {
@@ -28,7 +31,7 @@ func Country4StratumBarChart(srcPath, dstDir, prefix string, useRef bool) error 
 	}
 
 	c2eMap := make(map[string]string)
-	for i, cnList := range cnListList {
+	for stratum, cnList := range cnListList {
 		if len(cnList) == 0 {
 			continue
 		}
@@ -46,10 +49,7 @@ func Country4StratumBarChart(srcPath, dstDir, prefix string, useRef bool) error 
 			cnList[i].eng = eng
 		}
 
-		stratumStr := colNames[0]
-		if i > 0 {
-			stratumStr = "Stratum " + colNames[i]
-		}
+		stratumStr := getStratumStr(stratum)
 
 		err := generateCtr4SttBarChart(cnList, stratumStr, dstDir, prefix, useRef)
 		if err != nil {
@@ -72,7 +72,8 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 		}
 	}(file)
 
-	res := make([][]countryNum, stratumLimit)
+	res := make([][]countryNum, stratumLimit+1)
+	all := make([]countryNum, 0)
 
 	indexMap := make(map[string]int)
 	reader := csv.NewReader(file)
@@ -106,7 +107,20 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 			now = append(now, countryNum{country: country, num: 1})
 			res[stratum] = now
 		}
+
+		if country[0] < 0x80 {
+			country = specificSource
+		}
+		id = "*" + country
+		index, ok = indexMap[id]
+		if ok {
+			all[index].num++
+		} else {
+			indexMap[id] = len(all)
+			all = append(all, countryNum{country: country, num: 1})
+		}
 	}
+	res[stratumLimit] = all
 
 	return res, nil
 }
@@ -129,9 +143,10 @@ func generateCtr4SttBarChart(cnList []countryNum, stratum, dstDir, prefix string
 	} else {
 		p.Title.Text = "Distribution of Countries for " + stratum
 	}
-	p.X.Label.Text = "Count"
-	p.X.Max = max + 1 + math.Floor(max/16)
 	p.Y.Label.Text = "Country"
+	p.X.Label.Text = "Count"
+	p.X.Max = stretchMax(max, true)
+	p.X.Tick.Marker = plot.ConstantTicks(getMarks(p.X.Max))
 
 	bars, err := plotter.NewBarChart(values, vg.Points(20))
 	if err != nil {
@@ -158,4 +173,13 @@ func generateCtr4SttBarChart(cnList []countryNum, stratum, dstDir, prefix string
 	}
 
 	return nil
+}
+
+func getStratumStr(stratum int) string {
+	if stratum == 0 {
+		return colNames[0]
+	} else if stratum == stratumLimit {
+		return "All"
+	}
+	return "Stratum " + colNames[stratum]
 }

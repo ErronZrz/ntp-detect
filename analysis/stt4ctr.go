@@ -9,12 +9,14 @@ import (
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 	"io"
+	"math"
 	"os"
 	"strconv"
 )
 
 const (
 	stratumLimit = 16
+	global       = "全球"
 )
 
 var (
@@ -60,6 +62,7 @@ func generateCtr4SttMap(srcPath string) (map[string][]int, error) {
 	}(file)
 
 	countryMap := make(map[string][]int)
+	all := make([]int, stratumLimit)
 	reader := csv.NewReader(file)
 	for {
 		row, err := reader.Read()
@@ -76,6 +79,7 @@ func generateCtr4SttMap(srcPath string) (map[string][]int, error) {
 		if stratum >= stratumLimit {
 			stratum = 0
 		}
+		all[stratum]++
 		bins, ok := countryMap[row[2]]
 		if !ok {
 			bins = make([]int, stratumLimit)
@@ -85,6 +89,8 @@ func generateCtr4SttMap(srcPath string) (map[string][]int, error) {
 			bins[stratum]++
 		}
 	}
+
+	countryMap[global] = all
 
 	return countryMap, nil
 }
@@ -111,7 +117,8 @@ func generateStt4CtrBarChart(country, eng string, list []int, dstDir, prefix str
 	p.Title.Text = eng
 	p.X.Label.Text = "Stratum"
 	p.Y.Label.Text = "Count"
-	p.Y.Max = max + 1
+	p.Y.Max = stretchMax(max, false)
+	p.Y.Tick.Marker = plot.ConstantTicks(getMarks(p.Y.Max))
 
 	bars, err := plotter.NewBarChart(values, vg.Points(20))
 	if err != nil {
@@ -133,4 +140,27 @@ func generateStt4CtrBarChart(country, eng string, list []int, dstDir, prefix str
 	}
 
 	return nil
+}
+
+func stretchMax(x float64, horizontal bool) float64 {
+	var base float64 = 32
+	if horizontal {
+		base = 16
+	}
+	return x + 1 + math.Floor(x/base)
+}
+
+func getMarks(x float64) []plot.Tick {
+	var marks []plot.Tick
+	var base float64 = 1
+	if x > 5 {
+		base = 5
+		for x >= base*10 {
+			base *= 2
+		}
+	}
+	for i := 0; i <= int(x); i += int(base) {
+		marks = append(marks, plot.Tick{Value: float64(i), Label: strconv.Itoa(i)})
+	}
+	return marks
 }

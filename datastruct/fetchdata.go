@@ -20,8 +20,8 @@ func DataFromCSV(path string) ([]*Statistic, error) {
 		}
 	}(file)
 
-	reader := csv.NewReader(file)
 	res := make([]*Statistic, 0)
+	reader := csv.NewReader(file)
 
 	for {
 		row, err := reader.Read()

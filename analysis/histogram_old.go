@@ -28,7 +28,7 @@ func HistogramChart(srcPath, dstDir, prefix string, params histParams) error {
 
 func generateHistogramChart(data histData, dstDir, prefix string) error {
 	p := plot.New()
-	p.Title.Text = sharedParams.title + data.name
+	p.Title.Text = sharedParams.subject + data.name
 	p.X.Label.Text = sharedParams.xText
 
 	hist, err := plotter.NewHist(plotter.Values(data.values), 20)
