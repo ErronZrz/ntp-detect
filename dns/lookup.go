@@ -67,6 +67,10 @@ func AsyncDetectAfterDNS(src, dst string) error {
 
 func DetectStatisticAfterNTS(src, ipDst, staDst string) error {
 	visited := make(map[string]struct{})
+	_, err := os.Stat(staDst)
+	if err == nil {
+		return fmt.Errorf("dstFile %s already exists", staDst)
+	}
 	file, err := os.Create(staDst)
 	if err != nil {
 		return fmt.Errorf("error creating dstFile %s: %v", staDst, err)
@@ -89,7 +93,47 @@ func DetectStatisticAfterNTS(src, ipDst, staDst string) error {
 		return detect(domain, ip, writer)
 	}
 
-	return commonDNS(src, ipDst, detectWork)
+	err = commonDNS(src, ipDst, detectWork)
+	fmt.Printf("%d networks detected\n", len(visited))
+	return err
+}
+
+func AsyncDetectStatisticAfterDNS(src, ipDst, staDst string) error {
+	visited := make(map[string]struct{})
+	_, err := os.Stat(staDst)
+	if err == nil {
+		return fmt.Errorf("dstFile %s already exists", staDst)
+	}
+	file, err := os.Create(staDst)
+	if err != nil {
+		return fmt.Errorf("error creating dstFile %s: %v", staDst, err)
+	}
+	defer closeFunc(file, staDst)
+	writer := bufio.NewWriter(file)
+	defer func(writer *bufio.Writer) {
+		err := writer.Flush()
+		if err != nil {
+			fmt.Printf("error flushing writer: %v", err)
+		}
+	}(writer)
+	var mu sync.RWMutex
+	asyncDetectWork := func(domain, ip string) error {
+		netAddr := net24(ip)
+		mu.RLock()
+		_, ok := visited[netAddr]
+		mu.RUnlock()
+		if ok {
+			return nil
+		}
+		mu.Lock()
+		visited[netAddr] = struct{}{}
+		mu.Unlock()
+
+		return asyncDetect(domain, ip, writer)
+	}
+	err = commonDNS(src, ipDst, asyncDetectWork)
+	fmt.Printf("%d networks detected\n", len(visited))
+	return err
 }
 
 func TLSAfterDNS(src, dst string) error {
@@ -105,7 +149,15 @@ func TLSAfterDNS(src, dst string) error {
 }
 
 func DetectAEADAfterDNS(src, dst string) error {
-	return commonDNS(src, dst, detectAEAD)
+	visited := make(map[string]struct{})
+	detectAEADWork := func(domain, ip string) error {
+		if _, ok := visited[ip]; ok {
+			return nil
+		}
+		visited[ip] = struct{}{}
+		return detectAEAD(domain, ip)
+	}
+	return commonDNS(src, dst, detectAEADWork)
 }
 
 func commonDNS(src, dst string, work extraWork) error {
@@ -183,6 +235,7 @@ func commonDNS(src, dst string, work extraWork) error {
 		_ = writer.WriteByte('\n')
 	}
 
+	fmt.Printf("%d domains detected\n", len(done))
 	fmt.Printf("%s used, numDetected = %d\n", utils.DurationToStr(startTime, time.Now()), numDetected)
 
 	err = writer.Flush()
@@ -200,6 +253,7 @@ func asyncDetect(domain, ip string, writer *bufio.Writer) error {
 			fmt.Printf("error during detection: %v", err)
 		}
 	}()
+	<-time.After(5 * time.Second)
 	return nil
 }
 

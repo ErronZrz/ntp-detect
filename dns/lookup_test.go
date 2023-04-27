@@ -3,9 +3,9 @@ package dns
 import "testing"
 
 const (
-	src    = "D:/Desktop/Detect/domain/domain28.txt"
-	ipDst  = "D:/Desktop/Detect/domain/domain28_ip.txt"
-	staDst = "D:/Desktop/Detect/domain/domain28_sta.csv"
+	src    = "D:/Desktop/Detect/domain/final/EXTRA2.txt"
+	ipDst  = "D:/Desktop/Detect/domain/final/EXTRA2_ip.txt"
+	staDst = "D:/Desktop/Detect/domain/final/TWO2_sta.csv"
 )
 
 func TestOutputDNS(t *testing.T) {
@@ -45,6 +45,13 @@ func TestDetectAEADAfterDNS(t *testing.T) {
 
 func TestDetectStatisticAfterNTS(t *testing.T) {
 	err := DetectStatisticAfterNTS(src, ipDst, staDst)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAsyncDetectStatisticAfterDNS(t *testing.T) {
+	err := AsyncDetectStatisticAfterDNS(src, ipDst, staDst)
 	if err != nil {
 		t.Error(err)
 	}

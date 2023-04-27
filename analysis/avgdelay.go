@@ -53,6 +53,26 @@ func generateCountryDelayMap(srcPath string) (map[string][]float64, error) {
 	all := make([]float64, 0)
 	reader := csv.NewReader(file)
 
+	selected := map[string]struct{}{
+		"中国":   {},
+		"美国":   {},
+		"日本":   {},
+		"韩国":   {},
+		"英国":   {},
+		"新加坡":  {},
+		"印度":   {},
+		"南非":   {},
+		"俄罗斯":  {},
+		"德国":   {},
+		"法国":   {},
+		"意大利":  {},
+		"西班牙":  {},
+		"瑞士":   {},
+		"巴西":   {},
+		"澳大利亚": {},
+		"加拿大":  {},
+	}
+
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
@@ -61,6 +81,11 @@ func generateCountryDelayMap(srcPath string) (map[string][]float64, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read csv error: %v", err)
 		}
+		country := row[2]
+		if _, ok := selected[country]; !ok {
+			continue
+		}
+
 		delay, err := strconv.ParseInt(row[6], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("parse delay error: %v", err)
@@ -68,7 +93,6 @@ func generateCountryDelayMap(srcPath string) (map[string][]float64, error) {
 		ms := float64(delay) / 1000
 		all = append(all, ms)
 
-		country := row[2]
 		res[country] = append(res[country], ms)
 	}
 

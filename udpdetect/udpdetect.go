@@ -42,7 +42,7 @@ func init() {
 }
 
 func DialNetworkNTPWithBatchSize(cidr string, batchSize int) <-chan *datastruct.RcvPayload {
-	generator, err := addr.NewAddrGenerator(cidr)
+	generator, err := addr.NewModuloGenerator(cidr)
 	if err != nil {
 		return nil
 	}

@@ -74,7 +74,7 @@ func generateStratumPrecisionSlice(srcPath string) ([][]int64, error) {
 			stratum = 0
 		}
 
-		precision, err := strconv.ParseInt(row[5], 10, 64)
+		precision, err := strconv.ParseInt(row[4], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("parse precision error: %v", err)
 		}
@@ -118,8 +118,8 @@ func generateStratumPrecisionBarChart(precisionList []int64, stratum, dstDir, pr
 	}
 
 	p := plot.New()
-	p.Title.Text = fmt.Sprintf("Distribution of Precision for %s", stratum)
-	p.X.Label.Text = "Precision"
+	p.Title.Text = fmt.Sprintf("Distribution of Poll for %s", stratum)
+	p.X.Label.Text = "Poll"
 	p.Y.Label.Text = "Count"
 	p.Y.Max = stretchMax(max, false)
 	p.Y.Tick.Marker = plot.ConstantTicks(getMarks(p.Y.Max))

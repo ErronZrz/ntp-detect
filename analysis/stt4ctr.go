@@ -147,7 +147,7 @@ func generateStt4CtrBarChart(country, eng string, list []int, dstDir, prefix str
 func stretchMax(x float64, horizontal bool) float64 {
 	var base float64 = 32
 	if horizontal {
-		base = 16
+		base = 10
 	}
 	return x + 1 + math.Floor(x/base)
 }

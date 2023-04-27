@@ -20,6 +20,7 @@ type varParams struct {
 	yText        string
 	unit         string
 	divisor      float64
+	low, high    float64
 	useGlobalAvg bool
 	syncOnly     bool
 }
@@ -92,7 +93,10 @@ func getStratumLists(srcPath string) ([][]float64, error) {
 			return nil, fmt.Errorf("parse float %s error: %v", valStr, err)
 		}
 		realVal := float64(val) / sharedVarParams.divisor
-		// fmt.Println(realVal)
+		if realVal < sharedVarParams.low || realVal > sharedVarParams.high {
+			continue
+		}
+
 		all = append(all, realVal)
 
 		stratum, err := strconv.ParseInt(row[3], 10, 64)
@@ -132,12 +136,8 @@ func generateData(lists [][]float64) {
 		if len(lists[i]) == 0 {
 			continue
 		}
-		sharedData.labels = append(sharedData.labels, fmt.Sprintf("Stratum %d", i))
+		sharedData.labels = append(sharedData.labels, getStratumStr(i))
 		getSingle(lists[i], i > 0)
-	}
-
-	if containsZero {
-		sharedData.labels[2] = getStratumStr(0)
 	}
 }
 
@@ -205,6 +205,7 @@ func generateVarianceBarChart(dstDir string, prefix string) error {
 	p.Legend.Add("Median", barsMedian)
 	p.Legend.Add("Standard Deviation", barsStd)
 	p.Legend.Top = true
+	p.Legend.Left = true
 	p.NominalX(labels...)
 
 	chartWidth := (2 + (vg.Length(n) * 0.8)) * vg.Inch

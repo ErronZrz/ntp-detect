@@ -82,7 +82,7 @@ func generateHistMap(srcPath string) (map[string][]float64, error) {
 		all = append(all, realVal)
 
 		name := row[sharedParams.nameCol]
-		if name != "0" {
+		if name != "0" && name != "16" {
 			syn = append(syn, realVal)
 		}
 
@@ -98,7 +98,7 @@ func generateHistogramBarChart(data []float64, name, dstDir, prefix string) erro
 	if name != allName && name != synName {
 		name = sharedParams.subject + " " + name
 	}
-	if name == "Stratum 0" {
+	if name == "Stratum 0" || name == "Stratum 16" {
 		name = getStratumStr(0)
 	}
 	ps := sharedParams.partitions

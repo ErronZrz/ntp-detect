@@ -73,9 +73,9 @@ func (g *ModuloGenerator) NextHost() string {
 			break
 		}
 	}
-	if !g.HasNext() {
-		fmt.Printf("last host: %s\n", res)
-	}
+	//if !g.HasNext() {
+	//	fmt.Printf("last host: %s\n", res)
+	//}
 	return res
 }
 

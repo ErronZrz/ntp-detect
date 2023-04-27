@@ -78,6 +78,29 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 
 	indexMap := make(map[string]int)
 	reader := csv.NewReader(file)
+
+	selected := map[string]struct{}{
+		"中国":   {},
+		"美国":   {},
+		"日本":   {},
+		"韩国":   {},
+		"英国":   {},
+		"新加坡":  {},
+		"印度":   {},
+		"南非":   {},
+		"俄罗斯":  {},
+		"德国":   {},
+		"法国":   {},
+		"意大利":  {},
+		"西班牙":  {},
+		"瑞士":   {},
+		"巴西":   {},
+		"澳大利亚": {},
+		"加拿大":  {},
+		"未知地区": {},
+		"内网地址": {},
+	}
+
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
@@ -98,6 +121,9 @@ func generateCtr4SttSlice(srcPath string, useRef bool) ([][]countryNum, error) {
 		country := row[2]
 		if useRef {
 			country = row[9]
+		}
+		if _, ok := selected[country]; !ok && country[0] >= 0x80 {
+			continue
 		}
 		id := row[3] + country
 		index, ok := indexMap[id]

@@ -11,7 +11,7 @@ import (
 )
 
 func TestWriteToFile(t *testing.T) {
-	cidr := "203.107.6.0/24"
+	cidr := "203.107.6.0/22"
 	dataCh := udpdetect.DialNetworkNTP(cidr)
 	if dataCh == nil {
 		t.Error("dataCh is nil")
@@ -38,8 +38,8 @@ func TestWriteToFile(t *testing.T) {
 }
 
 func TestAsyncWriteToFile(t *testing.T) {
-	cidr := "203.107.6.0/20"
-	dataCh := async.DialNetworkNTP(cidr, 16)
+	cidr := "203.107.6.0/22"
+	dataCh := async.DialNetworkNTP(cidr)
 	if dataCh == nil {
 		t.Error("dataCh is nil")
 		return

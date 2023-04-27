@@ -18,16 +18,19 @@ const (
 	checkIntervalKey     = "async.read.check_interval"
 	timeoutKey           = "async.read.timeout"
 	haltTimeKey          = "async.send.halt_time"
+	partsKey             = "async.send.parts"
 	defaultLocalPort     = 11123
 	defaultCheckInterval = 1000
 	defaultTimeout       = 5000
 	defaultHaltTime      = 0
+	defaultParts         = 1
 )
 
 var (
 	checkInterval time.Duration
 	timeout       time.Duration
 	haltTime      time.Duration
+	parts         int
 	localPort     int
 	errCh         chan error
 	dataCh        chan *datastruct.RcvPayload
@@ -42,6 +45,7 @@ func init() {
 	viper.SetDefault(checkIntervalKey, defaultCheckInterval)
 	viper.SetDefault(timeoutKey, defaultTimeout)
 	viper.SetDefault(haltTimeKey, defaultHaltTime)
+	viper.SetDefault(partsKey, defaultParts)
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Printf("err reading resource file: %v", err)
@@ -51,9 +55,10 @@ func init() {
 	checkInterval = time.Duration(viper.GetInt64(checkIntervalKey)) * time.Millisecond
 	timeout = time.Duration(viper.GetInt64(timeoutKey)) * time.Millisecond
 	haltTime = time.Duration(viper.GetInt64(haltTimeKey)) * time.Millisecond
+	parts = viper.GetInt(partsKey)
 }
 
-func DialNetworkNTP(cidr string, parts int) <-chan *datastruct.RcvPayload {
+func DialNetworkNTP(cidr string) <-chan *datastruct.RcvPayload {
 	errCh = make(chan error)
 	finishCh := make(chan struct{})
 	go func(finishCh <-chan struct{}, errCh <-chan error) {
@@ -79,9 +84,11 @@ func DialNetworkNTP(cidr string, parts int) <-chan *datastruct.RcvPayload {
 	}(wg, finishCh)
 
 	networks := utils.SplitCIDR(cidr, parts)
+	timeBetweenParts := haltTime / time.Duration(parts)
 
 	for i := 0; i < parts; i++ {
 		go singleWriteRead(networks[i], i)
+		<-time.After(timeBetweenParts)
 	}
 
 	return dataCh
@@ -119,7 +126,7 @@ func writeNetWorkNTP(cidr string, conn *net.UDPConn, doneCh chan<- struct{}) {
 		doneCh <- struct{}{}
 	}()
 
-	generator, err := addr.NewAddrGenerator(cidr)
+	generator, err := addr.NewModuloGenerator(cidr)
 	if err != nil {
 		errCh <- err
 		return
